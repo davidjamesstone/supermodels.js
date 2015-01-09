@@ -1,0 +1,30 @@
+{
+  "name": "mdls",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha",
+    "build": "npm run build:js && npm run build:js-min",
+    "build:js": "browserify index.js --standalone makeModel > build.js",
+    "build:js-min": "browserify index.js --standalone makeModel | uglifyjs > build.min.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/davidjamesstone/mdls.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/davidjamesstone/mdls/issues"
+  },
+  "homepage": "https://github.com/davidjamesstone/mdls",
+  "dependencies": {
+    "emitter-component": "^1.1.1",
+    "emitter-event": "davidjamesstone/emitter-event",
+    "emitter-array": "davidjamesstone/emitter-array"
+  },
+  "devDependencies": {
+    "should": "^4.4.2"
+  }
+}

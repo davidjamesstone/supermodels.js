@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>emitter-array</title>
+
+</head>
+
+<body>
+  <div id="egg"></div>
+  <script src="build.js"></script>
+  <script>
+      //var ea, log;
+      
+      
+      log = function() { 
+        console.log.apply(console, [ea].concat(arguments)); 
+      };
+      
+      ea = emitterArray('a', 'b', 'c');
+      
+      
+      
+      ea.on('change', log);
+      
+      ea.push('d');
+      
+      log(ea);
+  </script>
+</body>
+
+</html>
