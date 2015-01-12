@@ -1,30 +1,32 @@
 {
-  "name": "mdls",
+  "name": "supermodels.js",
   "version": "0.0.0",
-  "description": "",
+  "description": "Turn plain old javascript objects into observable, traversable and validatable supermodels",
   "main": "index.js",
   "scripts": {
-    "test": "mocha",
-    "build": "npm run build:js && npm run build:js-min",
+    "test": "mocha ./test",
+    "build": "npm run test && npm run jshint && npm run build:js && npm run build:js-min",
     "build:js": "browserify index.js --standalone supermodels > ./dist/supermodels.js",
-    "build:js-min": "browserify index.js --standalone supermodels | uglifyjs > ./dist/supermodels.min.js"
+    "build:js-min": "browserify index.js --standalone supermodels | uglifyjs > ./dist/supermodels.min.js",
+    "jshint": "jshint index.js model.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/davidjamesstone/mdls.git"
+    "url": "https://github.com/davidjamesstone/supermodels.js.git"
   },
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/davidjamesstone/mdls/issues"
+    "url": "https://github.com/davidjamesstone/supermodels.js/issues"
   },
-  "homepage": "https://github.com/davidjamesstone/mdls",
+  "homepage": "https://github.com/davidjamesstone/supermodels.js",
   "dependencies": {
     "emitter-component": "^1.1.1",
     "emitter-event": "davidjamesstone/emitter-event",
     "emitter-array": "davidjamesstone/emitter-array"
   },
   "devDependencies": {
-    "should": "^4.4.2"
+    "should": "^4.4.2",
+    "browserify": "^8.1.0"
   }
 }

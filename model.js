@@ -1,14 +1,5 @@
 var Emitter = require('emitter-component');
-
-function ValidationError(target, error, validator, key) {
-  this.target = target;
-  this.error = error;
-  this.validator = validator;
-  
-  if (key) {
-    this.key = key;
-  }
-}
+var ValidationError = require('./validation-error');
 
 var model = Object.create(Emitter.prototype, {
   __name: {
@@ -28,7 +19,7 @@ var model = Object.create(Emitter.prototype, {
         parentKey = parentKeys[i];
         parentValue = this.__parent[parentKey];
         isArray = Array.isArray(parentValue);
-        
+
         if (isArray) {
           index = parentValue.indexOf(this);
           if (index !== -1) {
@@ -57,14 +48,72 @@ var model = Object.create(Emitter.prototype, {
     get: function() {
       var descendants = [];
 
+      function checkAndAddDescendantIfModel(obj) {
+
+        var keys = Object.keys(obj);
+        var key, value;
+
+        for (var i = 0; i < keys.length; i++) {
+
+          key = keys[i];
+          value = obj[key];
+
+          if (model.isPrototypeOf(value)) {
+
+            descendants.push(value);
+            checkAndAddDescendantIfModel(value);
+
+          } else if (Array.isArray(value) && value.create) {
+            for (var j = 0; j < value.length; j++) {
+
+              var arrValue = value[j];
+
+              if (model.isPrototypeOf(arrValue)) {
+                descendants.push(arrValue);
+                checkAndAddDescendantIfModel(arrValue);
+              }
+
+            }
+          }
+        }
+
+      }
+
+      checkAndAddDescendantIfModel(this);
+
+      return descendants;
+    }
+  },
+  __children: {
+    get: function() {
+      var children = [];
+
+      var keys = Object.keys(this);
+      var key, value;
+  
       for (var i = 0; i < keys.length; i++) {
-        var key = keys[i];
-        if (this[key] instanceof Mdl) {
-          Array.prototype.push.apply(descendants, this[key].descendants);
+  
+        key = keys[i];
+        value = this[key];
+  
+        if (model.isPrototypeOf(value)) {
+  
+          children.push(value);
+  
+        } else if (Array.isArray(value) && value.create) {
+          for (var j = 0; j < value.length; j++) {
+  
+            var arrValue = value[j];
+  
+            if (model.isPrototypeOf(arrValue)) {
+              children.push(arrValue);
+            }
+  
+          }
         }
       }
 
-      return descendants;
+      return children;
     }
   },
   __isRoot: {
@@ -94,16 +143,22 @@ var model = Object.create(Emitter.prototype, {
   errors: {
     get: function() {
       var errors = [];
-      
       var validators = this.__validators;
+      var validator, key, error, child, i;
       
-      for (var i = 0; i < validators.length; i++) {
-        var validator = validators[i];
-        var key = validator.key;
-        var error = validator.test.call(this, key ? this[key] : this);
+      for (i = 0; i < validators.length; i++) {
+        validator = validators[i];
+        key = validator.key;
+        error = validator.test.call(this, key ? this[key] : this, key);
+        
         if (error) {
           errors.push(new ValidationError(this, error, validator, key));
         }
+      }
+      
+      for (i = 0; i < this.__children.length; i++) {
+        child = this.__children[i];
+        Array.prototype.push.apply(errors, child.errors);
       }
 
       return errors;

@@ -9,7 +9,7 @@ var __SPECIAL_PROPS = [__VALIDATORS, __VALUE, __TYPE];
 
 var util = {
   toType: function(obj) {
-    return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase();
+    return Object.prototype.toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase();
   },
   isObject: function(value) {
     return this.toType(value) === 'object';
@@ -27,20 +27,24 @@ var util = {
     return this.toType(value) === 'function';
   },
   isDate: function(value) {
-    return this.toType() === 'date';
+    return this.toType(value) === 'date';
   },
   isSpecialProp: function(key) {
     return __SPECIAL_PROPS.indexOf(key) !== -1;
   },
   getProps: function(obj) {
-    if (!this.isObject(obj)) return null;
+    if (!this.isObject(obj)) {
+      return null;
+    }
 
     return Object.keys(obj).filter(function(item) {
       return !this.isSpecialProp(item);
     }, this);
   },
-  getSpecialProps: function(descriptor) {
-    if (!this.isObject(obj)) return null;
+  getSpecialProps: function(obj) {
+    if (!this.isObject(obj)) {
+      return null;
+    }
 
     return Object.keys(obj).filter(function(item) {
       return this.isSpecialProp(obj[item]);
@@ -51,22 +55,24 @@ var util = {
     return props && !!props.length;
   },
   hasSpecialProps: function(obj) {
-    var specialProps = getSpecialProps(obj);
+    var specialProps = this.getSpecialProps(obj);
     return specialProps && !!specialProps.length;
   },
   hasOnlySpecialProps: function(obj) {
-    if (!this.isObject(obj)) return false;
+    if (!this.isObject(obj)) {
+      return false;
+    }
 
     var keys = Object.keys(obj);
     return keys.every(function(item) {
-      return __SPECIAL_PROPS.indexOf(item) != -1;
+      return __SPECIAL_PROPS.indexOf(item) !== -1;
     });
   },
   hasMixedProps: function(obj) {
-    return hasSpecialProps(obj) && !hasOnlySpecialProps(obj);
+    return this.hasSpecialProps(obj) && !this.hasOnlySpecialProps(obj);
   },
   hasNoSpecialProps: function(obj) {
-    return !hasSpecialProps(obj);
+    return !this.hasSpecialProps(obj);
   },
   cast: function(value, type) {
     //todo: proper casting
@@ -121,7 +127,6 @@ function makeProp(key, descriptor, ctx, _, validators) {
   var setter = descriptor.set;
   var hasGetter = !!getter;
   var hasSetter = !!setter;
-  var hasGetterSetter = hasGetter || hasSetter;
 
   var desc = {
     configurable: false,
@@ -279,10 +284,11 @@ function mixin(source, target) {
   return target;
 }
 
-function addValidators(validators, model, key) {
-  var validator;
-  for (var i = 0; i < validators.length; i++) {
-    var source = validators[i];
+function addValidators(from, to, key) {
+  var validator, source;
+  
+  for (var i = 0; i < from.length; i++) {
+    source = from[i];
     if (util.isFunction(source)) {
       validator = {
         test: source
@@ -290,8 +296,12 @@ function addValidators(validators, model, key) {
     } else {
       validator = mixin(source, {});
     }
-    if (key) validator.key = key;
-    model.push(validator);
+    
+    if (key) {
+      validator.key = key;
+    }
+    
+    to.push(validator);
   }
 }
 

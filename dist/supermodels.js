@@ -10,7 +10,7 @@ var __SPECIAL_PROPS = [__VALIDATORS, __VALUE, __TYPE];
 
 var util = {
   toType: function(obj) {
-    return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase();
+    return Object.prototype.toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase();
   },
   isObject: function(value) {
     return this.toType(value) === 'object';
@@ -28,20 +28,24 @@ var util = {
     return this.toType(value) === 'function';
   },
   isDate: function(value) {
-    return this.toType() === 'date';
+    return this.toType(value) === 'date';
   },
   isSpecialProp: function(key) {
     return __SPECIAL_PROPS.indexOf(key) !== -1;
   },
   getProps: function(obj) {
-    if (!this.isObject(obj)) return null;
+    if (!this.isObject(obj)) {
+      return null;
+    }
 
     return Object.keys(obj).filter(function(item) {
       return !this.isSpecialProp(item);
     }, this);
   },
-  getSpecialProps: function(descriptor) {
-    if (!this.isObject(obj)) return null;
+  getSpecialProps: function(obj) {
+    if (!this.isObject(obj)) {
+      return null;
+    }
 
     return Object.keys(obj).filter(function(item) {
       return this.isSpecialProp(obj[item]);
@@ -52,22 +56,24 @@ var util = {
     return props && !!props.length;
   },
   hasSpecialProps: function(obj) {
-    var specialProps = getSpecialProps(obj);
+    var specialProps = this.getSpecialProps(obj);
     return specialProps && !!specialProps.length;
   },
   hasOnlySpecialProps: function(obj) {
-    if (!this.isObject(obj)) return false;
+    if (!this.isObject(obj)) {
+      return false;
+    }
 
     var keys = Object.keys(obj);
     return keys.every(function(item) {
-      return __SPECIAL_PROPS.indexOf(item) != -1;
+      return __SPECIAL_PROPS.indexOf(item) !== -1;
     });
   },
   hasMixedProps: function(obj) {
-    return hasSpecialProps(obj) && !hasOnlySpecialProps(obj);
+    return this.hasSpecialProps(obj) && !this.hasOnlySpecialProps(obj);
   },
   hasNoSpecialProps: function(obj) {
-    return !hasSpecialProps(obj);
+    return !this.hasSpecialProps(obj);
   },
   cast: function(value, type) {
     //todo: proper casting
@@ -122,7 +128,6 @@ function makeProp(key, descriptor, ctx, _, validators) {
   var setter = descriptor.set;
   var hasGetter = !!getter;
   var hasSetter = !!setter;
-  var hasGetterSetter = hasGetter || hasSetter;
 
   var desc = {
     configurable: false,
@@ -280,10 +285,11 @@ function mixin(source, target) {
   return target;
 }
 
-function addValidators(validators, model, key) {
-  var validator;
-  for (var i = 0; i < validators.length; i++) {
-    var source = validators[i];
+function addValidators(from, to, key) {
+  var validator, source;
+  
+  for (var i = 0; i < from.length; i++) {
+    source = from[i];
     if (util.isFunction(source)) {
       validator = {
         test: source
@@ -291,8 +297,12 @@ function addValidators(validators, model, key) {
     } else {
       validator = mixin(source, {});
     }
-    if (key) validator.key = key;
-    model.push(validator);
+    
+    if (key) {
+      validator.key = key;
+    }
+    
+    to.push(validator);
   }
 }
 
@@ -329,16 +339,7 @@ function makeModel(schema, parent) {
 module.exports = makeModel;
 },{"./model":2,"emitter-array":3,"emitter-event":5}],2:[function(_dereq_,module,exports){
 var Emitter = _dereq_('emitter-component');
-
-function ValidationError(target, error, validator, key) {
-  this.target = target;
-  this.error = error;
-  this.validator = validator;
-  
-  if (key) {
-    this.key = key;
-  }
-}
+var ValidationError = _dereq_('./validation-error');
 
 var model = Object.create(Emitter.prototype, {
   __name: {
@@ -358,7 +359,7 @@ var model = Object.create(Emitter.prototype, {
         parentKey = parentKeys[i];
         parentValue = this.__parent[parentKey];
         isArray = Array.isArray(parentValue);
-        
+
         if (isArray) {
           index = parentValue.indexOf(this);
           if (index !== -1) {
@@ -387,14 +388,72 @@ var model = Object.create(Emitter.prototype, {
     get: function() {
       var descendants = [];
 
+      function checkAndAddDescendantIfModel(obj) {
+
+        var keys = Object.keys(obj);
+        var key, value;
+
+        for (var i = 0; i < keys.length; i++) {
+
+          key = keys[i];
+          value = obj[key];
+
+          if (model.isPrototypeOf(value)) {
+
+            descendants.push(value);
+            checkAndAddDescendantIfModel(value);
+
+          } else if (Array.isArray(value) && value.create) {
+            for (var j = 0; j < value.length; j++) {
+
+              var arrValue = value[j];
+
+              if (model.isPrototypeOf(arrValue)) {
+                descendants.push(arrValue);
+                checkAndAddDescendantIfModel(arrValue);
+              }
+
+            }
+          }
+        }
+
+      }
+
+      checkAndAddDescendantIfModel(this);
+
+      return descendants;
+    }
+  },
+  __children: {
+    get: function() {
+      var children = [];
+
+      var keys = Object.keys(this);
+      var key, value;
+  
       for (var i = 0; i < keys.length; i++) {
-        var key = keys[i];
-        if (this[key] instanceof Mdl) {
-          Array.prototype.push.apply(descendants, this[key].descendants);
+  
+        key = keys[i];
+        value = this[key];
+  
+        if (model.isPrototypeOf(value)) {
+  
+          children.push(value);
+  
+        } else if (Array.isArray(value) && value.create) {
+          for (var j = 0; j < value.length; j++) {
+  
+            var arrValue = value[j];
+  
+            if (model.isPrototypeOf(arrValue)) {
+              children.push(arrValue);
+            }
+  
+          }
         }
       }
 
-      return descendants;
+      return children;
     }
   },
   __isRoot: {
@@ -424,16 +483,22 @@ var model = Object.create(Emitter.prototype, {
   errors: {
     get: function() {
       var errors = [];
-      
       var validators = this.__validators;
+      var validator, key, error, child, i;
       
-      for (var i = 0; i < validators.length; i++) {
-        var validator = validators[i];
-        var key = validator.key;
-        var error = validator.test.call(this, key ? this[key] : this);
+      for (i = 0; i < validators.length; i++) {
+        validator = validators[i];
+        key = validator.key;
+        error = validator.test.call(this, key ? this[key] : this, key);
+        
         if (error) {
           errors.push(new ValidationError(this, error, validator, key));
         }
+      }
+      
+      for (i = 0; i < this.__children.length; i++) {
+        child = this.__children[i];
+        Array.prototype.push.apply(errors, child.errors);
       }
 
       return errors;
@@ -442,7 +507,7 @@ var model = Object.create(Emitter.prototype, {
 });
 
 module.exports = model;
-},{"emitter-component":4}],3:[function(_dereq_,module,exports){
+},{"./validation-error":6,"emitter-component":4}],3:[function(_dereq_,module,exports){
 var Emitter = _dereq_('emitter-component');
 
 var createEvent = function(name, target, value) {
@@ -751,6 +816,18 @@ module.exports = function EmitterEvent(name, target, detail) {
 
   return e;
 };
+},{}],6:[function(_dereq_,module,exports){
+function ValidationError(target, error, validator, key) {
+  this.target = target;
+  this.error = error;
+  this.validator = validator;
+
+  if (key) {
+    this.key = key;
+  }
+}
+
+module.exports = ValidationError;
 },{}]},{},[1])
 (1)
 });
