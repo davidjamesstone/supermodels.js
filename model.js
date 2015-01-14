@@ -135,7 +135,7 @@ var model = Object.create(Emitter.prototype, {
       }
     }
   },
-  __hasDecendents: {
+  __hasDecendants: {
     get: function() {
       return !!this.__descendants.length;
     }

@@ -179,7 +179,10 @@ function makeProp(key, descriptor, ctx, _, validators) {
   // property on the context object
   Object.defineProperty(ctx, key, desc);
 
-  if (isObject && util.isArray(descriptorValue[__VALIDATORS])) {
+  // Add validators if the are any present and it is an object
+  // with only special properties. If it is a mixed object the 
+  // validators will be added to the child model.
+  if (hasOnlySpecialProps && util.isArray(descriptorValue[__VALIDATORS])) {
     addValidators(descriptorValue[__VALIDATORS], validators, key);
   }
 
@@ -190,11 +193,16 @@ function makeProp(key, descriptor, ctx, _, validators) {
 
     if (descriptorValue.length) {
 
+      // Create an intermediate model that
+      // represents the array. All events are 
+      // proxied up through this. todo??
+      var arrModelPrototype = createModel(ctx);
+      
       // Create a new prototype we can use to
       // create and validate the items in the array
-      var arrItemModelPrototype = createModel(ctx);
+      var arrItemModelPrototype = createModel(arrModelPrototype);
 
-      // Validate new models by override the emitter array 
+      // Validate new models by overriding the emitter array 
       // mutators that can cause new items to enter the array
       overrideEmitterArrayAddingMutators(arr, arrItemModelPrototype);
 
@@ -208,11 +216,33 @@ function makeProp(key, descriptor, ctx, _, validators) {
         return newModel;
       };
 
-      arr.on('change', function() {
-        console.log('changes');
+      // rethrow array events against this model and any ancestors
+      arr.on('change', function(e) {
+        
+        // Emit change event against this model
+        ctx.emit('change', new EmitterEvent('change', ctx, {
+          name: key,
+          originalEvent: e
+        }));
+  
+        // Emit specific change event against this model
+        ctx.emit('change:' + key, new EmitterEvent('change:' + key, this, {
+          originalEvent: e
+        }));
+  
+        // Bubble the change event up against the ancestors
+        for (var i = 0; i < ctx.__ancestors.length; i++) {
+          ctx.__ancestors[i].emit('change', new EmitterEvent('change', this, {
+            name: ctx.__path + '.' + key,
+            originalEvent: e
+          }));
+        }
+        
       });
     }
+    
     _[key] = arr;
+    
   } else if (hasProps) {
     // silently set up an inner model
     _[key] = makeModel(descriptorValue, ctx);
@@ -358,17 +388,20 @@ var model = Object.create(Emitter.prototype, {
       for (var i = 0; i < parentKeys.length; i++) {
         parentKey = parentKeys[i];
         parentValue = this.__parent[parentKey];
-        isArray = Array.isArray(parentValue);
+        // isArray = Array.isArray(parentValue);
 
-        if (isArray) {
-          index = parentValue.indexOf(this);
-          if (index !== -1) {
-            return parentKey + '[' + index + ']';
-          }
-        } else if (parentValue === this) {
+        // if (isArray) {
+        //   index = parentValue.indexOf(this);
+        //   if (index !== -1) {
+        //     return parentKey + '[' + index + ']';
+        //   }
+        // } else 
+        if (parentValue === this) {
           return parentKey;
         }
       }
+      
+      throw new Error('Not found in parent');
     }
   },
   __ancestors: {
@@ -475,7 +508,7 @@ var model = Object.create(Emitter.prototype, {
       }
     }
   },
-  __hasDecendents: {
+  __hasDecendants: {
     get: function() {
       return !!this.__descendants.length;
     }

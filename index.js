@@ -178,7 +178,10 @@ function makeProp(key, descriptor, ctx, _, validators) {
   // property on the context object
   Object.defineProperty(ctx, key, desc);
 
-  if (isObject && util.isArray(descriptorValue[__VALIDATORS])) {
+  // Add validators if the are any present and it is an object
+  // with only special properties. If it is a mixed object the 
+  // validators will be added to the child model.
+  if (hasOnlySpecialProps && util.isArray(descriptorValue[__VALIDATORS])) {
     addValidators(descriptorValue[__VALIDATORS], validators, key);
   }
 
@@ -207,8 +210,28 @@ function makeProp(key, descriptor, ctx, _, validators) {
         return newModel;
       };
 
-      arr.on('change', function() {
-        console.log('changes');
+      // rethrow array events against this model and any ancestors
+      arr.on('change', function(e) {
+        
+        // Emit change event against this model
+        ctx.emit('change', new EmitterEvent('change', ctx, {
+          name: key,
+          originalEvent: e
+        }));
+  
+        // Emit specific change event against this model
+        ctx.emit('change:' + key, new EmitterEvent('change:' + key, this, {
+          originalEvent: e
+        }));
+  
+        // Bubble the change event up against the ancestors
+        for (var i = 0; i < ctx.__ancestors.length; i++) {
+          ctx.__ancestors[i].emit('change', new EmitterEvent('change', this, {
+            name: ctx.__path + '.' + key,
+            originalEvent: e
+          }));
+        }
+        
       });
     }
     _[key] = arr;

@@ -2,14 +2,16 @@ var should = require('should');
 var supermodel = require('../');
 var ValidationError = require('../validation-error');
 
-Object.model = function(schema) {
-  return supermodel(schema);
-};
+Object.model = supermodel;
 
 /**
- * Validators helper
- * name 'String'
- * test 'fn'
+ * Simple Validators Example
+ * Validators are defined as objects with a 'test' (fn) property
+ * The function is invoked in the context of the model being validated.
+ * The 'test' function is called with the following:
+ * value - the value of the key or model to be validated
+ * key - the key name. This will be undefined for model level validators
+ *
  * Any other data will be passed through and
  * available in any subsequent validation errors.
  */
