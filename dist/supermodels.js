@@ -1,19 +1,25 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.supermodels=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-var EmitterEvent = _dereq_('emitter-event');
-var emitterArray = _dereq_('emitter-array');
-var mdl = _dereq_('./model');
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.supermodels=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var emitter = require('emitter-object');
+var EmitterEvent = require('emitter-event');
+var emitterArray = require('emitter-array');
+var mdl = require('./model');
 
 var __VALIDATORS = '__validators';
 var __VALUE = '__value';
 var __TYPE = '__type';
-var __SPECIAL_PROPS = [__VALIDATORS, __VALUE, __TYPE];
+var __GET = '__get';
+var __SET = '__set';
+var __CONFIGURABLE = '__configurable';
+var __ENUMERABLE = '__enumerable';
+
+var __SPECIAL_PROPS = [__VALIDATORS, __VALUE, __TYPE, __GET, __SET, __CONFIGURABLE, __ENUMERABLE];
 
 var util = {
-  toType: function(obj) {
+  typeOf: function(obj) {
     return Object.prototype.toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase();
   },
   isObject: function(value) {
-    return this.toType(value) === 'object';
+    return this.typeOf(value) === 'object';
   },
   isArray: function(value) {
     return Array.isArray(value);
@@ -25,10 +31,10 @@ var util = {
     return !this.isObject(value) && !this.isArray(value);
   },
   isFunction: function(value) {
-    return this.toType(value) === 'function';
+    return this.typeOf(value) === 'function';
   },
   isDate: function(value) {
-    return this.toType(value) === 'date';
+    return this.typeOf(value) === 'date';
   },
   isSpecialProp: function(key) {
     return __SPECIAL_PROPS.indexOf(key) !== -1;
@@ -48,7 +54,7 @@ var util = {
     }
 
     return Object.keys(obj).filter(function(item) {
-      return this.isSpecialProp(obj[item]);
+      return this.isSpecialProp(item);
     }, this);
   },
   hasProps: function(obj) {
@@ -79,13 +85,41 @@ var util = {
     //todo: proper casting
     switch (type) {
       case String:
-        return String(value);
+        {
+          if (value === undefined || value === null || util.typeOf(value) === 'string') {
+            return value;
+          }
+          return value.toString && value.toString();
+        }
+        break;
       case Number:
-        return Number(value);
+        {
+          if (value === undefined || value === null) {
+            return NaN;
+          }
+          if (util.typeOf(value) === 'number') {
+            return value;
+          }
+          return Number(value);
+        }
+        break;
       case Boolean:
-        return Boolean(value);
+        {
+          if (!value) {
+            return false;
+          }
+          var falsey = ['0', 'false', 'off', 'no'];
+          return falsey.indexOf(value) === -1;
+        }
+        break;
       case Date:
-        return Date(value);
+        {
+          if (value === undefined || value === null || util.typeOf(value) === 'date') {
+            return value;
+          }
+          return new Date(value);
+        }
+        break;
       default:
         return value;
     }
@@ -105,13 +139,11 @@ var util = {
   }
 };
 
-
 /**
  * Adds a property 'key' to a context object
  * using the 'descriptor' to provide schema information
  */
 function makeProp(key, descriptor, ctx, _, validators) {
-
   var descriptorValue = util.resolveDescriptorValue(descriptor);
 
   if (util.isFunction(descriptorValue)) {
@@ -123,15 +155,20 @@ function makeProp(key, descriptor, ctx, _, validators) {
   var isObject = util.isObject(descriptorValue);
   var hasProps = util.hasProps(descriptorValue);
   var hasOnlySpecialProps = util.hasOnlySpecialProps(descriptorValue);
+  var hasSpecialProps = util.hasSpecialProps(descriptorValue);
   var isPrimitive = !isArray && !isObject;
-  var getter = descriptor.get;
-  var setter = descriptor.set;
+  
+  var configurable = hasSpecialProps && (typeof descriptorValue[__CONFIGURABLE] !== 'undefined') ?  descriptorValue[__CONFIGURABLE] : descriptor.configurable;
+  var enumerable = hasSpecialProps && (typeof descriptorValue[__ENUMERABLE] !== 'undefined') ?  descriptorValue[__ENUMERABLE] : descriptor.enumerable;
+
+  var getter = descriptor.get || (hasSpecialProps && descriptorValue[__GET]);
+  var setter = descriptor.set || (hasSpecialProps && descriptorValue[__SET]);
   var hasGetter = !!getter;
   var hasSetter = !!setter;
 
   var desc = {
-    configurable: false,
-    enumerable: true,
+    configurable: configurable,
+    enumerable: enumerable,
     get: function() {
       return hasGetter ? getter.call(this) : _[key];
     }
@@ -145,6 +182,8 @@ function makeProp(key, descriptor, ctx, _, validators) {
 
     desc.set = function(value) {
 
+      var oldValue = _[key];
+
       if (hasSetter) {
         setter.call(this, value);
       } else {
@@ -156,19 +195,34 @@ function makeProp(key, descriptor, ctx, _, validators) {
       // Emit change event against this model
       this.emit('change', new EmitterEvent('change', this, {
         name: key,
-        value: newValue
+        value: newValue,
+        oldValue: oldValue
       }));
 
       // Emit specific change event against this model
       this.emit('change:' + key, new EmitterEvent('change:' + key, this, {
-        value: newValue
+        value: newValue,
+        oldValue: oldValue
       }));
 
       // Bubble the change event up against the ancestors
+      var name;
       for (var i = 0; i < this.__ancestors.length; i++) {
+
+        name = this.__path + '.' + key;
+
+        // Emit change event against this ancestor
         this.__ancestors[i].emit('change', new EmitterEvent('change', this, {
-          name: this.__path + '.' + key,
-          value: newValue
+          name: name,
+          value: newValue,
+          oldValue: oldValue
+        }));
+
+        // Emit specific change event against this ancestor
+        this.__ancestors[i].emit('change:' + name, new EmitterEvent('change:' + name, this, {
+          name: name,
+          value: newValue,
+          oldValue: oldValue
         }));
       }
     };
@@ -189,18 +243,35 @@ function makeProp(key, descriptor, ctx, _, validators) {
   if (isArray) {
 
     //
-    var arr = emitterArray();
+    var arr = emitterArray(function(name, target, detail) {
+
+      // Emit change event against this model
+      arr.emit('change', new EmitterEvent('change', arr, mixin({
+        type: name,
+      }, detail)));
+
+      // Emit specific array event against this model
+      arr.emit(name, new EmitterEvent(name, arr, detail));
+
+      // Bubble the change event up against the ancestors
+      for (var i = 0; i < arr.__ancestors.length; i++) {
+        arr.__ancestors[i].emit('change', new EmitterEvent('change', arr, mixin({
+          name: arr.__path,
+          type: name,
+        }, detail)));
+      }
+    });
+
+    emitter(arr);
+
+    var descriptors = createModelDescriptors(ctx);
+    Object.defineProperties(arr, descriptors);
 
     if (descriptorValue.length) {
 
-      // Create an intermediate model that
-      // represents the array. All events are 
-      // proxied up through this. todo??
-      var arrModelPrototype = createModel(ctx);
-      
       // Create a new prototype we can use to
       // create and validate the items in the array
-      var arrItemModelPrototype = createModel(arrModelPrototype);
+      var arrItemModelPrototype = createModel(arr);
 
       // Validate new models by overriding the emitter array 
       // mutators that can cause new items to enter the array
@@ -216,40 +287,22 @@ function makeProp(key, descriptor, ctx, _, validators) {
         return newModel;
       };
 
-      // rethrow array events against this model and any ancestors
-      arr.on('change', function(e) {
-        
-        // Emit change event against this model
-        ctx.emit('change', new EmitterEvent('change', ctx, {
-          name: key,
-          originalEvent: e
-        }));
-  
-        // Emit specific change event against this model
-        ctx.emit('change:' + key, new EmitterEvent('change:' + key, this, {
-          originalEvent: e
-        }));
-  
-        // Bubble the change event up against the ancestors
-        for (var i = 0; i < ctx.__ancestors.length; i++) {
-          ctx.__ancestors[i].emit('change', new EmitterEvent('change', this, {
-            name: ctx.__path + '.' + key,
-            originalEvent: e
-          }));
-        }
-        
-      });
+      // // rethrow array events against this model and any ancestors
+      // arr.on('change', function(e) {
+
+
+      // });
     }
-    
+
     _[key] = arr;
-    
+
   } else if (hasProps) {
     // silently set up an inner model
     _[key] = makeModel(descriptorValue, ctx);
   } else if (isPrimitive) {
     // silently set up an inner model
     _[key] = descriptorValue;
-  } else if (descriptorValue && descriptorValue[__VALUE]) {
+  } else if (descriptorValue && descriptorValue.hasOwnProperty(__VALUE)) {
     // set the default value
     _[key] = descriptorValue[__VALUE];
   }
@@ -292,16 +345,24 @@ function overrideEmitterArrayAddingMutators(arr, obj) {
   }
 }
 
-function createModel(parent) {
-
-  var model = Object.create(mdl, {
+function createModelDescriptors(parent) {
+  var descriptors = mixin({
     __parent: {
       value: parent,
       enumerable: false,
       writable: false,
       configurable: false
     }
-  });
+  }, mdl);
+
+  return descriptors;
+}
+
+function createModel(parent) {
+  var descriptors = createModelDescriptors(parent);
+  var model = Object.create({}, descriptors);
+
+  emitter(model);
 
   return model;
 }
@@ -312,12 +373,13 @@ function mixin(source, target) {
       target[prop] = source[prop];
     }
   }
+
   return target;
 }
 
 function addValidators(from, to, key) {
   var validator, source;
-  
+
   for (var i = 0; i < from.length; i++) {
     source = from[i];
     if (util.isFunction(source)) {
@@ -327,11 +389,11 @@ function addValidators(from, to, key) {
     } else {
       validator = mixin(source, {});
     }
-    
+
     if (key) {
       validator.key = key;
     }
-    
+
     to.push(validator);
   }
 }
@@ -358,20 +420,36 @@ function addKeys(schema, model) {
 }
 
 function makeModel(schema, parent) {
-
   var model = createModel(parent);
-
   addKeys(schema, model);
-
   return model;
 }
 
 module.exports = makeModel;
-},{"./model":2,"emitter-array":3,"emitter-event":5}],2:[function(_dereq_,module,exports){
-var Emitter = _dereq_('emitter-component');
-var ValidationError = _dereq_('./validation-error');
+},{"./model":2,"emitter-array":3,"emitter-event":6,"emitter-object":7}],2:[function(require,module,exports){
+//var Emitter = require('emitter-component');
+var ValidationError = require('./validation-error');
 
-var model = Object.create(Emitter.prototype, {
+var descriptors = {
+  __supermodel: {
+    value: true
+  },
+  __keys: {
+    get: function() {
+      var keys = Object.keys(this);
+      var omit = [
+        'addEventListener', 'on', 'once', 'removeEventListener', 'removeAllListeners',
+        'removeListener', 'off', 'emit', 'listeners', 'hasListeners', 'pop', 'push',
+        'reverse', 'shift', 'sort', 'splice', 'update', 'unshift', 'create'
+      ];
+      if (Array.isArray(this)) {
+        keys = keys.filter(function(item) {
+          return omit.indexOf(item) < 0;
+        });
+      }
+      return keys;
+    }
+  },
   __name: {
     get: function() {
       if (this.__isRoot) {
@@ -382,13 +460,13 @@ var model = Object.create(Emitter.prototype, {
       // Look up to the parent and loop through it's keys,
       // Any value or array found to contain the value of this (this model)
       // then we return the key and index in the case we found the model in an array.
-      var parentKeys = Object.keys(this.__parent);
-      var parentKey, parentValue, isArray, index;
+      var parentKeys = this.__parent.__keys;
+      var parentKey, parentValue, isArray; //, index;
 
       for (var i = 0; i < parentKeys.length; i++) {
         parentKey = parentKeys[i];
         parentValue = this.__parent[parentKey];
-        // isArray = Array.isArray(parentValue);
+        isArray = Array.isArray(parentValue);
 
         // if (isArray) {
         //   index = parentValue.indexOf(this);
@@ -400,8 +478,6 @@ var model = Object.create(Emitter.prototype, {
           return parentKey;
         }
       }
-      
-      throw new Error('Not found in parent');
     }
   },
   __ancestors: {
@@ -423,7 +499,7 @@ var model = Object.create(Emitter.prototype, {
 
       function checkAndAddDescendantIfModel(obj) {
 
-        var keys = Object.keys(obj);
+        var keys = obj.__keys;
         var key, value;
 
         for (var i = 0; i < keys.length; i++) {
@@ -431,23 +507,24 @@ var model = Object.create(Emitter.prototype, {
           key = keys[i];
           value = obj[key];
 
-          if (model.isPrototypeOf(value)) {
+          if (value && value.__supermodel) {
 
             descendants.push(value);
             checkAndAddDescendantIfModel(value);
 
-          } else if (Array.isArray(value) && value.create) {
-            for (var j = 0; j < value.length; j++) {
-
-              var arrValue = value[j];
-
-              if (model.isPrototypeOf(arrValue)) {
-                descendants.push(arrValue);
-                checkAndAddDescendantIfModel(arrValue);
-              }
-
-            }
           }
+          // else if (Array.isArray(value) && value.create) {
+          //   for (var j = 0; j < value.length; j++) {
+
+          //     var arrValue = value[j];
+
+          //     if (arrValue && arrValue.__supermodel) {
+          //       descendants.push(arrValue);
+          //       checkAndAddDescendantIfModel(arrValue);
+          //     }
+
+          //   }
+          // }
         }
 
       }
@@ -461,29 +538,29 @@ var model = Object.create(Emitter.prototype, {
     get: function() {
       var children = [];
 
-      var keys = Object.keys(this);
+      var keys = this.__keys;
       var key, value;
-  
+
       for (var i = 0; i < keys.length; i++) {
-  
+
         key = keys[i];
         value = this[key];
-  
-        if (model.isPrototypeOf(value)) {
-  
+
+        if (value && value.__supermodel) {
+
           children.push(value);
-  
-        } else if (Array.isArray(value) && value.create) {
-          for (var j = 0; j < value.length; j++) {
-  
-            var arrValue = value[j];
-  
-            if (model.isPrototypeOf(arrValue)) {
-              children.push(arrValue);
-            }
-  
-          }
-        }
+
+        } // else if (Array.isArray(value) && value.__supermodel && value.create) {
+        //   for (var j = 0; j < value.length; j++) {
+
+        //     var arrValue = value[j];
+
+        //     if (arrValue && arrValue.__supermodel) {
+        //       children.push(arrValue);
+        //     }
+
+        //   }
+        // }
       }
 
       return children;
@@ -518,17 +595,20 @@ var model = Object.create(Emitter.prototype, {
       var errors = [];
       var validators = this.__validators;
       var validator, key, error, child, i;
-      
-      for (i = 0; i < validators.length; i++) {
-        validator = validators[i];
-        key = validator.key;
-        error = validator.test.call(this, key ? this[key] : this, key);
-        
-        if (error) {
-          errors.push(new ValidationError(this, error, validator, key));
+
+      if (validators) {
+
+        for (i = 0; i < validators.length; i++) {
+          validator = validators[i];
+          key = validator.key;
+          error = validator.test.call(this, key ? this[key] : this, key);
+
+          if (error) {
+            errors.push(new ValidationError(this, error, validator, key));
+          }
         }
       }
-      
+
       for (i = 0; i < this.__children.length; i++) {
         child = this.__children[i];
         Array.prototype.push.apply(errors, child.errors);
@@ -537,43 +617,36 @@ var model = Object.create(Emitter.prototype, {
       return errors;
     }
   }
-});
-
-module.exports = model;
-},{"./validation-error":6,"emitter-component":4}],3:[function(_dereq_,module,exports){
-var Emitter = _dereq_('emitter-component');
-
-var createEvent = function(name, target, value) {
-  var e = {
-    name: name,
-    target: target
-  };
-
-  if (value) {
-    e.value = value;
-  }
-
-  return e;
 };
 
-function raiseEvent(name, arr, value) {
-  var e = createEvent(name, arr, value);
+//var model = Object.create(Emitter.prototype, descriptors);
+
+module.exports = descriptors;
+},{"./validation-error":8}],3:[function(require,module,exports){
+var Emitter = require('emitter-object');
+var EmitterEvent = require('emitter-event');
+
+function result(name, arr, value) {
+  var e = new EmitterEvent(name, arr, value);
 
   arr.emit(name, e);
   arr.emit('change', e);
 }
-module.exports = function() {
 
+module.exports = function(callback) {
+
+  callback = callback || raiseEvent;
+  
   /**
    * Construct an Array from the passed arguments
    */
   var arrCtorArgs = arguments;
-  var arr = Array.apply(null, arrCtorArgs);
+  var arr = [];//Array.apply(null, arrCtorArgs);
 
   /**
    * Mixin Emitter to the Array instance
    */
-  Emitter(arr);
+  if (!callback) Emitter(arr);
 
   /**
    * Proxied array mutators methods
@@ -584,51 +657,51 @@ module.exports = function() {
    */
   var pop = function() {
 
-    var ret = Array.prototype.pop.apply(arr);
+    var result = Array.prototype.pop.apply(arr);
 
-    raiseEvent('pop', arr, ret);
+    callback('pop', arr, { value: result });
 
-    return ret;
+    return result;
   };
   var push = function() {
 
-    var ret = Array.prototype.push.apply(arr, arguments);
+    var result = Array.prototype.push.apply(arr, arguments);
 
-    raiseEvent('push', arr, ret);
+    callback('push', arr, { value: result });
 
-    return ret;
+    return result;
   };
   var reverse = function() {
 
-    var ret = Array.prototype.reverse.apply(arr);
+    var result = Array.prototype.reverse.apply(arr);
 
-    raiseEvent('reverse', arr, ret);
+    callback('reverse', arr, { value: result });
 
-    return ret;
+    return result;
   };
   var shift = function() {
 
-    var ret = Array.prototype.shift.apply(arr);
+    var result = Array.prototype.shift.apply(arr);
 
-    raiseEvent('shift', arr, ret);
+    callback('shift', arr, { value: result });
 
-    return ret;
+    return result;
   };
   var sort = function() {
 
-    var ret = Array.prototype.sort.apply(arr, arguments);
+    var result = Array.prototype.sort.apply(arr, arguments);
 
-    raiseEvent('sort', arr, ret);
+    callback('sort', arr, { value: result });
 
-    return ret;
+    return result;
   };
   var unshift = function() {
 
-    var ret = Array.prototype.unshift.apply(arr, arguments);
+    var result = Array.prototype.unshift.apply(arr, arguments);
 
-    raiseEvent('unshift', arr, ret);
+    callback('unshift', arr, { value: result });
 
-    return ret;
+    return result;
   };
   var splice = function() {
 
@@ -636,14 +709,15 @@ module.exports = function() {
       return;
     }
 
-    var ret = Array.prototype.splice.apply(arr, arguments);
+    var result = Array.prototype.splice.apply(arr, arguments);
 
-    raiseEvent('splice', arr, {
-      removed: ret,
+    callback('splice', arr, {
+      value: result,
+      removed: result,
       added: arguments.slice(2)
     });
 
-    return ret;
+    return result;
   };
 
   /**
@@ -661,16 +735,29 @@ module.exports = function() {
    */
   arr.update = function(index, value) {
 
+    var oldValue = arr[index];
     var newValue = arr[index] = value;
-    
-    raiseEvent('update', arr, newValue);
-    
+
+    callback('update', arr, {
+      value: newValue,
+      oldValue: oldValue
+    });
+
     return newValue;
   };
 
   return arr;
 };
-},{"emitter-component":4}],4:[function(_dereq_,module,exports){
+},{"emitter-event":4,"emitter-object":5}],4:[function(require,module,exports){
+module.exports = function EmitterEvent(name, target, detail) {
+  this.name = name;
+  this.target = target;
+  
+  if (detail) {
+    this.detail = detail;
+  }
+};
+},{}],5:[function(require,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -685,8 +772,23 @@ module.exports = Emitter;
  */
 
 function Emitter(obj) {
-  if (obj) return mixin(obj);
-};
+  var ctx = obj || this;
+  
+  var callbacks;
+  Object.defineProperty(ctx, '__callbacks', {
+    get: function() {
+      return callbacks = callbacks || {};
+    },
+    set: function(value) {
+      callbacks = value;
+    }
+  });
+  
+  if (obj) {
+    ctx = mixin(obj);
+    return ctx;
+  }
+}
 
 /**
  * Mixin the emitter properties.
@@ -714,8 +816,7 @@ function mixin(obj) {
 
 Emitter.prototype.on =
 Emitter.prototype.addEventListener = function(event, fn){
-  this._callbacks = this._callbacks || {};
-  (this._callbacks[event] = this._callbacks[event] || [])
+  (this.__callbacks[event] = this.__callbacks[event] || [])
     .push(fn);
   return this;
 };
@@ -731,11 +832,8 @@ Emitter.prototype.addEventListener = function(event, fn){
  */
 
 Emitter.prototype.once = function(event, fn){
-  var self = this;
-  this._callbacks = this._callbacks || {};
-
   function on() {
-    self.off(event, on);
+    this.off(event, on);
     fn.apply(this, arguments);
   }
 
@@ -758,21 +856,20 @@ Emitter.prototype.off =
 Emitter.prototype.removeListener =
 Emitter.prototype.removeAllListeners =
 Emitter.prototype.removeEventListener = function(event, fn){
-  this._callbacks = this._callbacks || {};
-
+  
   // all
   if (0 == arguments.length) {
-    this._callbacks = {};
+    this.__callbacks = {};
     return this;
   }
 
   // specific event
-  var callbacks = this._callbacks[event];
+  var callbacks = this.__callbacks[event];
   if (!callbacks) return this;
 
   // remove all handlers
   if (1 == arguments.length) {
-    delete this._callbacks[event];
+    delete this.__callbacks[event];
     return this;
   }
 
@@ -796,10 +893,9 @@ Emitter.prototype.removeEventListener = function(event, fn){
  * @return {Emitter}
  */
 
-Emitter.prototype.emit = function(event){
-  this._callbacks = this._callbacks || {};
+Emitter.prototype.emit = function(event) {
   var args = [].slice.call(arguments, 1)
-    , callbacks = this._callbacks[event];
+    , callbacks = this.__callbacks[event];
 
   if (callbacks) {
     callbacks = callbacks.slice(0);
@@ -819,9 +915,8 @@ Emitter.prototype.emit = function(event){
  * @api public
  */
 
-Emitter.prototype.listeners = function(event){
-  this._callbacks = this._callbacks || {};
-  return this._callbacks[event] || [];
+Emitter.prototype.listeners = function(event) {
+  return this.__callbacks[event] || [];
 };
 
 /**
@@ -832,24 +927,15 @@ Emitter.prototype.listeners = function(event){
  * @api public
  */
 
-Emitter.prototype.hasListeners = function(event){
-  return !! this.listeners(event).length;
+Emitter.prototype.hasListeners = function(event) {
+  return !!this.listeners(event).length;
 };
 
-},{}],5:[function(_dereq_,module,exports){
-module.exports = function EmitterEvent(name, target, detail) {
-  var e = {
-    name: name,
-    target: target
-  };
-
-  if (detail) {
-    e.detail = detail;
-  }
-
-  return e;
-};
-},{}],6:[function(_dereq_,module,exports){
+},{}],6:[function(require,module,exports){
+arguments[4][4][0].apply(exports,arguments)
+},{"dup":4}],7:[function(require,module,exports){
+arguments[4][5][0].apply(exports,arguments)
+},{"dup":5}],8:[function(require,module,exports){
 function ValidationError(target, error, validator, key) {
   this.target = target;
   this.error = error;
@@ -861,6 +947,5 @@ function ValidationError(target, error, validator, key) {
 }
 
 module.exports = ValidationError;
-},{}]},{},[1])
-(1)
+},{}]},{},[1])(1)
 });

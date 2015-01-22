@@ -390,7 +390,7 @@ describe('validators', function() {
         model.orders.should.be.an.Array.and.have.lengthOf(1);
         
         // should result in order name required error
-        var nameIsRequiredError = model.errors[0]
+        var nameIsRequiredError = model.errors[0];
         nameIsRequiredError.target.should.eql(order);
         nameIsRequiredError.error.should.eql('name is required');
         nameIsRequiredError.validator.name.should.eql(validators.required.name);

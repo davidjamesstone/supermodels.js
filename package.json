@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/davidjamesstone/supermodels.js",
   "dependencies": {
-    "emitter-component": "^1.1.1",
+    "emitter-object": "davidjamesstone/emitter-object",
     "emitter-event": "davidjamesstone/emitter-event",
     "emitter-array": "davidjamesstone/emitter-array"
   },
