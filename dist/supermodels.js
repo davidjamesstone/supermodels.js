@@ -11,7 +11,6 @@ var __GET = '__get';
 var __SET = '__set';
 var __CONFIGURABLE = '__configurable';
 var __ENUMERABLE = '__enumerable';
-
 var __SPECIAL_PROPS = [__VALIDATORS, __VALUE, __TYPE, __GET, __SET, __CONFIGURABLE, __ENUMERABLE];
 
 var util = {
@@ -339,7 +338,7 @@ function overrideEmitterArrayAddingMutators(arr, obj) {
 
   if (splice) {
     arr.splice = function() {
-      ensureValidPrototypes(obj, arguments.slice(2));
+      ensureValidPrototypes(obj, Array.prototype.slice.call(arguments, 2));
       return splice.apply(arr, arguments);
     };
   }
@@ -442,11 +441,11 @@ var descriptors = {
         'removeListener', 'off', 'emit', 'listeners', 'hasListeners', 'pop', 'push',
         'reverse', 'shift', 'sort', 'splice', 'update', 'unshift', 'create'
       ];
-      if (Array.isArray(this)) {
+      //if (Array.isArray(this)) {
         keys = keys.filter(function(item) {
           return omit.indexOf(item) < 0;
         });
-      }
+      //}
       return keys;
     }
   },
@@ -513,18 +512,6 @@ var descriptors = {
             checkAndAddDescendantIfModel(value);
 
           }
-          // else if (Array.isArray(value) && value.create) {
-          //   for (var j = 0; j < value.length; j++) {
-
-          //     var arrValue = value[j];
-
-          //     if (arrValue && arrValue.__supermodel) {
-          //       descendants.push(arrValue);
-          //       checkAndAddDescendantIfModel(arrValue);
-          //     }
-
-          //   }
-          // }
         }
 
       }
@@ -550,17 +537,7 @@ var descriptors = {
 
           children.push(value);
 
-        } // else if (Array.isArray(value) && value.__supermodel && value.create) {
-        //   for (var j = 0; j < value.length; j++) {
-
-        //     var arrValue = value[j];
-
-        //     if (arrValue && arrValue.__supermodel) {
-        //       children.push(arrValue);
-        //     }
-
-        //   }
-        // }
+        }
       }
 
       return children;
@@ -618,8 +595,6 @@ var descriptors = {
     }
   }
 };
-
-//var model = Object.create(Emitter.prototype, descriptors);
 
 module.exports = descriptors;
 },{"./validation-error":8}],3:[function(require,module,exports){
@@ -714,7 +689,7 @@ module.exports = function(callback) {
     callback('splice', arr, {
       value: result,
       removed: result,
-      added: arguments.slice(2)
+      added: Array.prototype.slice.call(arguments, 2)
     });
 
     return result;

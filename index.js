@@ -10,7 +10,6 @@ var __GET = '__get';
 var __SET = '__set';
 var __CONFIGURABLE = '__configurable';
 var __ENUMERABLE = '__enumerable';
-
 var __SPECIAL_PROPS = [__VALIDATORS, __VALUE, __TYPE, __GET, __SET, __CONFIGURABLE, __ENUMERABLE];
 
 var util = {
@@ -338,7 +337,7 @@ function overrideEmitterArrayAddingMutators(arr, obj) {
 
   if (splice) {
     arr.splice = function() {
-      ensureValidPrototypes(obj, arguments.slice(2));
+      ensureValidPrototypes(obj, Array.prototype.slice.call(arguments, 2));
       return splice.apply(arr, arguments);
     };
   }

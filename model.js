@@ -13,11 +13,11 @@ var descriptors = {
         'removeListener', 'off', 'emit', 'listeners', 'hasListeners', 'pop', 'push',
         'reverse', 'shift', 'sort', 'splice', 'update', 'unshift', 'create'
       ];
-      if (Array.isArray(this)) {
+      //if (Array.isArray(this)) {
         keys = keys.filter(function(item) {
           return omit.indexOf(item) < 0;
         });
-      }
+      //}
       return keys;
     }
   },
@@ -84,18 +84,6 @@ var descriptors = {
             checkAndAddDescendantIfModel(value);
 
           }
-          // else if (Array.isArray(value) && value.create) {
-          //   for (var j = 0; j < value.length; j++) {
-
-          //     var arrValue = value[j];
-
-          //     if (arrValue && arrValue.__supermodel) {
-          //       descendants.push(arrValue);
-          //       checkAndAddDescendantIfModel(arrValue);
-          //     }
-
-          //   }
-          // }
         }
 
       }
@@ -121,17 +109,7 @@ var descriptors = {
 
           children.push(value);
 
-        } // else if (Array.isArray(value) && value.__supermodel && value.create) {
-        //   for (var j = 0; j < value.length; j++) {
-
-        //     var arrValue = value[j];
-
-        //     if (arrValue && arrValue.__supermodel) {
-        //       children.push(arrValue);
-        //     }
-
-        //   }
-        // }
+        }
       }
 
       return children;
@@ -189,7 +167,5 @@ var descriptors = {
     }
   }
 };
-
-//var model = Object.create(Emitter.prototype, descriptors);
 
 module.exports = descriptors;
