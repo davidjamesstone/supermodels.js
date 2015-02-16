@@ -170,33 +170,83 @@ var o = {
  * Any other data will be passed through and
  * available in any subsequent validation errors.
 
+##### Simple example
 ```js
-var over18 = {
-  name: 'over18',
-  test: function(value, key) {
-    if (value < 18) {
-      return (this.firstName || 'Person ') + key + ' should be over 18';
-    }
-  }
-}
 
-  number: 
+// Declare a simple truthy function.
+// You can do your own validation methods
+// like this or use a separate library, or both.
+var required = function(value, key) {
+  if (!value) {
+    return key + ' is required';
+  }
+};
+
+// Moving away from the person example, here we
+// show how supermodels can act as a UI controller
+var loginController = {
+  userName: {
+    __type: String,
+    __validators: [required]
+  },
+  password: {
+    __type: String,
+    __validators: [yourPasswordValidator]
+  },
+  address: addressSchema,
+  acceptedTermsConditions: {
+    __type: Boolean,
+    __validators: [required]
+  },
+  __validators: [someModelLevelValidator]
+};
+```
+
+
+```js
+function Required(displayName, predicate) {
+  this.displayName = displayName;
+  this.predicate = predicate;
+}
+Required.prototype.name = 'required';
+Required.prototype.test = function(value, key) {
+  if (!value && (this.predicate && this.predicate())) {
+    return this.displayName + ' is required';
+  }
+};
+
+var over18 = function(value, key) {
+  if (value && value < 18) {
+    return (this.firstName || 'Person') + ' ' + key + ' should be over 18';
+  }
+};
+
+var otherTitleRequired = function(value, key) {
+  if (value && value < 18) {
+    return (this.firstName || 'Person') + ' ' + key + ' should be over 18';
+  }
+};
   
 var personSchema = {
-  firstName: String, // Property will  be cast to a String
-  lastName: String,
+  title: {
+    __type: String,
+    __validators: [new Required('Title')]
+  },
+  otherTitle: {
+    __type: String,
+    __validators: [new Required('Other title', function() { return this.title === 'Other'; })]
+  },
+  firstName: {
+    __type: String,
+    __validators: [new Required('First name')]
+  },
+  lastName: {
+    __type: String,
+    __validators: [new Required('Last name')]
+  },
   age: {
     __type: Number,
     __validators: [over18]
-  }
-  address: {
-    line1: String,
-    line2: String,
-    country: String,
-    latLong: {
-      lat: Number,
-      long: Number
-    }
   }
 };
 
