@@ -141,13 +141,17 @@ person.on('change:address.latLong.lat', function(e) {});
   `__validators`,  `__value`, `__type`, `__get`, `__set`, `__configurable` and `__enumerable`
 
 #### Type casting
-
-  There are two ways to give a property a type and have it cast on set
+  
+  Have your properties cast their value on set using `__type`.
+  Supported types are `String`, `Number`, `Date` and `Boolean`.
+  
+  There are two ways to give a property a type:
 
   The simple short hand as above:
 ```js
 var o = {
-  typedString: String
+  typedString: String,
+  typedNumber: Number
 }
 ```
   or using the special  `__type` property
@@ -156,23 +160,43 @@ var o = {
 var o = {
   typedString: {
     __type: String
+  },
+  typedNumber: {
+    __type: Number
   }
 }
 ```
+
 #### Validators
 
- * Validators are defined as objects with a 'test' (fn) property
- * The function is invoked in the context of the model being validated.
- * The 'test' function is called with the following:
- * value - the value of the key or model to be validated
- * key - the key name. This will be undefined for model level validators
- *
- * Any other data will be passed through and
- * available in any subsequent validation errors.
+  Validate your properties and models using including a `__validators` array.
+  The array should a list of functions. Validators can be applied at both the "property" level e.g. `line1` and the  "object" level e.g. `address` or `person`.
+  
+  
+```js
+var myValidator1 = function(value[, key]) {};
+```
+  Each validator function get passed the current value as the first argument.
+  The `this` context is the current "object" level e.g. `address` or `person`.
+  If a `key` is present, it will be passed as a second argument.
+  
+  If a validator returns nothing (`undefined`) then we assume everything is good.
+  Any other response will yield a `ValidationError` into the `.errors` properties.
+
+```js
+// 
+// Continuing the example from above you can see that errors, 
+// like events, propagate up the object to the root
+
+person.errors //=> [] an array containing any errors for the entire person
+person.address.errors //=> [] an array containing any errors for address and below
+person.address.latLong.errors //=> [] an array containing any errors for just the latLong
+
+```
 
 ##### Simple example
-```js
 
+```js
 // Declare a simple truthy function.
 // You can do your own validation methods
 // like this or use a separate library, or both.
@@ -181,6 +205,47 @@ var required = function(value, key) {
     return key + ' is required';
   }
 };
+
+var personSchema = {
+  name: {
+    __type: String,
+    __validators: [required]
+  },
+  address: {
+    line1: {
+      __type: String,
+      __validators: [required]
+    },
+    line2: {
+      __type: String,
+      __validators: [required]
+    }
+  }
+}
+
+var person = supermodels(personSchema);
+
+person.errors
+// => [ 3 x ValidationErrors: name, line1, line 2 are required ]
+
+person.address.errors
+// => [ 3 x ValidationErrors: line1, line 2 are required]
+
+person.name = 'Jane Doe';
+person.address.line1 = 'Buckingham Palace';
+person.address.line2 = 'London';
+
+person.errors
+// => []
+
+person.address.errors
+// => []
+```
+  
+  In addition to declaring validators a simple function like above, they can also be defined as objects with a  'test' (fn) property. Any other data contained on the object will be passed through and available in the errors.
+
+##### Real world example
+```js
 
 // Moving away from the person example, here we
 // show how supermodels can act as a UI controller
@@ -229,12 +294,10 @@ var otherTitleRequired = function(value, key) {
   
 var personSchema = {
   title: {
+    id: Number,
+    
     __type: String,
     __validators: [new Required('Title')]
-  },
-  otherTitle: {
-    __type: String,
-    __validators: [new Required('Other title', function() { return this.title === 'Other'; })]
   },
   firstName: {
     __type: String,
@@ -246,8 +309,9 @@ var personSchema = {
   },
   age: {
     __type: Number,
-    __validators: [over18]
-  }
+    __validators: [required, over18]
+  },
+  __validators: [noBigBadWolves]
 };
 
 var person = supermodels(personSchema);
