@@ -1,0 +1,35 @@
+<script src="../xx.js"></script>
+<script>
+  var a = [{line1: String}];
+  
+  var o = {
+    a: null,
+    b: {
+      __type: String,
+      __validators: [],
+      __value: 3
+    },
+    c: Number,
+    d: [],
+    e: [1],
+    f: [{ a: 1, b: 2, c: undefined, d: [{}] }],
+    g: { __type: Array, __validators: [] },
+    h: [Number],
+    i: Array,
+    j: {
+      __type: String,
+      __validators: [],
+      __value: 3,
+      somethingElse: {
+        
+      }
+    }
+  }
+  
+  var s = [];
+  for (var prop in o) {
+    s.push(new Schema(o[prop]));
+  }
+  new Schema(o);
+  
+</script>

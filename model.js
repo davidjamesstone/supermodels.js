@@ -1,4 +1,3 @@
-//var Emitter = require('emitter-component');
 var ValidationError = require('./validation-error');
 
 var descriptors = {
@@ -13,11 +12,11 @@ var descriptors = {
         'removeListener', 'off', 'emit', 'listeners', 'hasListeners', 'pop', 'push',
         'reverse', 'shift', 'sort', 'splice', 'update', 'unshift', 'create'
       ];
-      //if (Array.isArray(this)) {
-        keys = keys.filter(function(item) {
-          return omit.indexOf(item) < 0;
-        });
-      //}
+      
+      keys = keys.filter(function(item) {
+        return omit.indexOf(item) < 0;
+      });
+      
       return keys;
     }
   },
@@ -32,23 +31,53 @@ var descriptors = {
       // Any value or array found to contain the value of this (this model)
       // then we return the key and index in the case we found the model in an array.
       var parentKeys = this.__parent.__keys;
-      var parentKey, parentValue, isArray; //, index;
+      var parentKey, parentValue, isArray;
 
       for (var i = 0; i < parentKeys.length; i++) {
         parentKey = parentKeys[i];
         parentValue = this.__parent[parentKey];
         isArray = Array.isArray(parentValue);
 
-        // if (isArray) {
-        //   index = parentValue.indexOf(this);
-        //   if (index !== -1) {
-        //     return parentKey + '[' + index + ']';
-        //   }
-        // } else 
         if (parentValue === this) {
           return parentKey;
         }
       }
+    }
+  },
+  __path: {
+    get: function() {
+      if (this.__hasAncestors && !this.__parent.__isRoot) {
+        return this.__parent.__path + '.' + this.__name;
+      } else {
+        return this.__name;
+      }
+    }
+  },
+  __isRoot: {
+    get: function() {
+      return !this.__hasAncestors;
+    }
+  },
+  __children: {
+    get: function() {
+      var children = [];
+
+      var keys = this.__keys;
+      var key, value;
+
+      for (var i = 0; i < keys.length; i++) {
+
+        key = keys[i];
+        value = this[key];
+
+        if (value && value.__supermodel) {
+
+          children.push(value);
+
+        }
+      }
+
+      return children;
     }
   },
   __ancestors: {
@@ -93,45 +122,9 @@ var descriptors = {
       return descendants;
     }
   },
-  __children: {
-    get: function() {
-      var children = [];
-
-      var keys = this.__keys;
-      var key, value;
-
-      for (var i = 0; i < keys.length; i++) {
-
-        key = keys[i];
-        value = this[key];
-
-        if (value && value.__supermodel) {
-
-          children.push(value);
-
-        }
-      }
-
-      return children;
-    }
-  },
-  __isRoot: {
-    get: function() {
-      return !this.__hasAncestors;
-    }
-  },
   __hasAncestors: {
     get: function() {
       return !!this.__ancestors.length;
-    }
-  },
-  __path: {
-    get: function() {
-      if (this.__hasAncestors && !this.__parent.__isRoot) {
-        return this.__parent.__path + '.' + this.__name;
-      } else {
-        return this.__name;
-      }
     }
   },
   __hasDecendants: {

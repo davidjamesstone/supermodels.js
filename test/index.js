@@ -51,13 +51,8 @@ describe('person', function() {
     _privateProperty: String,
     typedString: String,
     untypedString: null,
-
-    firstName: {
-      __validators: 'required'
-    },
-    lastName: {
-      __validators: 'required'
-    },
+    firstName: String,
+    lastName: String,
     get fullName() {
       return this.firstName + ' ' + this.lastName;
     },
@@ -66,9 +61,7 @@ describe('person', function() {
       this.firstName = parts[0];
       this.lastName = parts[1];
     },
-    age: {
-      __validators: 'required|number'
-    },
+    age: Number,
     address: {
       line1: {
         __value: 'Marble Arch'
@@ -506,3 +499,41 @@ describe('validators', function() {
   });
 
 });
+
+
+describe('array', function() {
+
+  var arraySchema = {
+    val: ['2'],
+    val1: [2],
+    val2: [Number]
+  };
+  
+  var arr;
+
+  before(function() {
+    arr = Object.model(arraySchema);
+  });
+
+  // test cases
+  describe('#array', function() {
+    it('should be ok and have the correct keys', function() {
+      arr.should.be.ok;
+      arr.should.have.property('val').be.Array.and.have.lengthOf(0);
+      arr.should.have.property('val1').be.Array.and.have.lengthOf(0);
+      arr.should.have.property('val2').be.Array.and.have.lengthOf(0);
+      // person.should.have.property('val1').be.Number.and.eql(2);
+      // person.should.have.property('firstName');
+      // person.should.have.property('fn').and.be.a.Function;
+      // person.should.have.property('firstName');
+      // person.should.have.property('initializedDate').and.be.a.Date;
+      // person.should.have.property('typedAndInitializedDate').and.be.a.Date;
+
+
+      // person.address.should.be.ok;
+      // person.address.should.have.property('line1').and.be.a.String.eql('Marble Arch');
+      // person.address.should.have.property('country').and.be.a.String.eql('UK');
+    });
+  });
+});
+  

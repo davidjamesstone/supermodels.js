@@ -2,7 +2,7 @@
 var emitter = require('emitter-object');
 var EmitterEvent = require('emitter-event');
 var emitterArray = require('emitter-array');
-var mdl = require('./model');
+var modelDescriptors = require('./model');
 
 var __VALIDATORS = '__validators';
 var __VALUE = '__value';
@@ -241,7 +241,9 @@ function makeProp(key, descriptor, ctx, _, validators) {
 
   if (isArray) {
 
-    //
+    // Create an array that overrides it's mutator methods
+    // It's not strictly an Emitter yet. Since we pass a callback
+    // emitterArray does not mixin Emitter methods for us.
     var arr = emitterArray(function(name, target, detail) {
 
       // Emit change event against this model
@@ -261,10 +263,11 @@ function makeProp(key, descriptor, ctx, _, validators) {
       }
     });
 
+    // We do now want to make
+    // this array an emitter and
+    // to apply the Model descriptors
     emitter(arr);
-
-    var descriptors = createModelDescriptors(ctx);
-    Object.defineProperties(arr, descriptors);
+    Object.defineProperties(arr, createModelDescriptors(ctx));
 
     if (descriptorValue.length) {
 
@@ -285,12 +288,6 @@ function makeProp(key, descriptor, ctx, _, validators) {
 
         return newModel;
       };
-
-      // // rethrow array events against this model and any ancestors
-      // arr.on('change', function(e) {
-
-
-      // });
     }
 
     _[key] = arr;
@@ -352,7 +349,7 @@ function createModelDescriptors(parent) {
       writable: false,
       configurable: false
     }
-  }, mdl);
+  }, modelDescriptors);
 
   return descriptors;
 }
@@ -360,7 +357,7 @@ function createModelDescriptors(parent) {
 function createModel(parent) {
   var descriptors = createModelDescriptors(parent);
   var model = Object.create({}, descriptors);
-
+  
   emitter(model);
 
   return model;
@@ -426,7 +423,6 @@ function makeModel(schema, parent) {
 
 module.exports = makeModel;
 },{"./model":2,"emitter-array":3,"emitter-event":6,"emitter-object":7}],2:[function(require,module,exports){
-//var Emitter = require('emitter-component');
 var ValidationError = require('./validation-error');
 
 var descriptors = {
@@ -441,11 +437,11 @@ var descriptors = {
         'removeListener', 'off', 'emit', 'listeners', 'hasListeners', 'pop', 'push',
         'reverse', 'shift', 'sort', 'splice', 'update', 'unshift', 'create'
       ];
-      //if (Array.isArray(this)) {
-        keys = keys.filter(function(item) {
-          return omit.indexOf(item) < 0;
-        });
-      //}
+      
+      keys = keys.filter(function(item) {
+        return omit.indexOf(item) < 0;
+      });
+      
       return keys;
     }
   },
@@ -460,19 +456,13 @@ var descriptors = {
       // Any value or array found to contain the value of this (this model)
       // then we return the key and index in the case we found the model in an array.
       var parentKeys = this.__parent.__keys;
-      var parentKey, parentValue, isArray; //, index;
+      var parentKey, parentValue, isArray;
 
       for (var i = 0; i < parentKeys.length; i++) {
         parentKey = parentKeys[i];
         parentValue = this.__parent[parentKey];
         isArray = Array.isArray(parentValue);
 
-        // if (isArray) {
-        //   index = parentValue.indexOf(this);
-        //   if (index !== -1) {
-        //     return parentKey + '[' + index + ']';
-        //   }
-        // } else 
         if (parentValue === this) {
           return parentKey;
         }

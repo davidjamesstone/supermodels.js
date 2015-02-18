@@ -107,83 +107,83 @@
 
     // var person = Object.model(personSchema);
 
-    // person.on('change', function(e) {
-    //   console.log(e);
-    // });
-
-    // person.fullName = 'Dave Stone';
-    // person.address.fullAddress = '81 Moss Road, Cheshire, UK';
-    // person.address.latLong.lat = 65.56;
-    // person.address.latLong.long = 'Invalid value. Because I\'m typed, this should result in me becoming NaN';
-
-    // person.items.on('push', function() {
-    //   console.log('push')
-    // });
-
-    // var item = person.items.create();
-    // person.items.push(item);
-
-    // var subItem = item.subItems.create();
-    // item.subItems.push(subItem);
-
-    // window.person = person;
-
-    // // var Address = make({
-    // //   name: 'Address',
-    // //   keys: {
-    // //     line1: {
-    // //       type: String
-    // //     },
-    // //     line2: {
-    // //       type: String
-    // //     }
-    // //   }
-    // // });
-
-    // // var Person = make({
-    // //   name: 'Person',
-    // //   keys: {
-    // //     name: {
-    // //       type: String,
-    // //       validators: ''
-    // //     },
-    // //     age: {
-    // //       type: Number,
-    // //       validators: ''
-    // //     },
-    // //     isMale: {
-    // //       type: Boolean,
-    // //       validators: ''
-    // //     },
-    // //     address: {
-    // //       type: 'Address'
-    // //     }
-    // //   }
-    // // });
-
-    // // var p = new Person();
-    // // p.descendants;
-    // // var el = document.getElementById('egg');
-
-    // // p.on('change', function(e) {
+    // // person.on('change', function(e) {
     // //   console.log(e);
     // // });
 
-    // // p.on('change:name', function(e) {
-    // //   console.log(e);
+    // // person.fullName = 'Dave Stone';
+    // // person.address.fullAddress = '81 Moss Road, Cheshire, UK';
+    // // person.address.latLong.lat = 65.56;
+    // // person.address.latLong.long = 'Invalid value. Because I\'m typed, this should result in me becoming NaN';
+
+    // // person.items.on('push', function() {
+    // //   console.log('push')
     // // });
 
-    // // p.name = 'mandy';
-    // // p.age = '56';
-    // // p.isMale = 1;
-    // // p.address.line1 = '81 Moss Road';
-    // // p.address.line2 = '82 Moss Road';
+    // // var item = person.items.create();
+    // // person.items.push(item);
+
+    // // var subItem = item.subItems.create();
+    // // item.subItems.push(subItem);
+
+    // // window.person = person;
+
+    // // // var Address = make({
+    // // //   name: 'Address',
+    // // //   keys: {
+    // // //     line1: {
+    // // //       type: String
+    // // //     },
+    // // //     line2: {
+    // // //       type: String
+    // // //     }
+    // // //   }
+    // // // });
+
+    // // // var Person = make({
+    // // //   name: 'Person',
+    // // //   keys: {
+    // // //     name: {
+    // // //       type: String,
+    // // //       validators: ''
+    // // //     },
+    // // //     age: {
+    // // //       type: Number,
+    // // //       validators: ''
+    // // //     },
+    // // //     isMale: {
+    // // //       type: Boolean,
+    // // //       validators: ''
+    // // //     },
+    // // //     address: {
+    // // //       type: 'Address'
+    // // //     }
+    // // //   }
+    // // // });
+
+    // // // var p = new Person();
+    // // // p.descendants;
+    // // // var el = document.getElementById('egg');
+
+    // // // p.on('change', function(e) {
+    // // //   console.log(e);
+    // // // });
+
+    // // // p.on('change:name', function(e) {
+    // // //   console.log(e);
+    // // // });
+
+    // // // p.name = 'mandy';
+    // // // p.age = '56';
+    // // // p.isMale = 1;
+    // // // p.address.line1 = '81 Moss Road';
+    // // // p.address.line2 = '82 Moss Road';
 
 
-    // // p.address.on('change:line2', function(e) {
-    // //   console.log(e);
-    // // });
+    // // // p.address.on('change:line2', function(e) {
+    // // //   console.log(e);
+    // // // });
 
-    // // p.address.line2 = '83 Moss Road';
+    // // // p.address.line2 = '83 Moss Road';
 
-    // // el.innerText = Object.keys(p);
+    // // // el.innerText = Object.keys(p);

@@ -1,7 +1,7 @@
 var emitter = require('emitter-object');
 var EmitterEvent = require('emitter-event');
 var emitterArray = require('emitter-array');
-var mdl = require('./model');
+var modelDescriptors = require('./model');
 
 var __VALIDATORS = '__validators';
 var __VALUE = '__value';
@@ -80,7 +80,6 @@ var util = {
     return !this.hasSpecialProps(obj);
   },
   cast: function(value, type) {
-    //todo: proper casting
     switch (type) {
       case String:
         {
@@ -240,7 +239,9 @@ function makeProp(key, descriptor, ctx, _, validators) {
 
   if (isArray) {
 
-    //
+    // Create an array that overrides it's mutator methods
+    // It's not strictly an Emitter yet. Since we pass a callback
+    // emitterArray does not mixin Emitter methods for us.
     var arr = emitterArray(function(name, target, detail) {
 
       // Emit change event against this model
@@ -260,15 +261,24 @@ function makeProp(key, descriptor, ctx, _, validators) {
       }
     });
 
+    // We do now want to make
+    // this array an emitter and
+    // to apply the Model descriptors
     emitter(arr);
+    Object.defineProperties(arr, createModelDescriptors(ctx));
 
-    var descriptors = createModelDescriptors(ctx);
-    Object.defineProperties(arr, descriptors);
-
+    // 
     if (descriptorValue.length) {
 
+      // If the array contains a value, assume the
+      // first item is the schema for that array
+      var arrItemModelDescriptorValue = util.resolveDescriptorValue(descriptorValue[0]);
+      
+      var arrItemModelSchema = arrItemModelDescriptorValue;
+      
       // Create a new prototype we can use to
-      // create and validate the items in the array
+      // create and validate the items in the array.
+      // Set the parent of the prototype to the array
       var arrItemModelPrototype = createModel(arr);
 
       // Validate new models by overriding the emitter array 
@@ -279,17 +289,9 @@ function makeProp(key, descriptor, ctx, _, validators) {
       // for creating array item instances
       arr.create = function() {
         var newModel = Object.create(arrItemModelPrototype);
-
-        addKeys(descriptorValue[0], newModel);
-
+        addKeys(arrItemModelSchema, newModel);
         return newModel;
       };
-
-      // // rethrow array events against this model and any ancestors
-      // arr.on('change', function(e) {
-
-
-      // });
     }
 
     _[key] = arr;
@@ -298,7 +300,7 @@ function makeProp(key, descriptor, ctx, _, validators) {
     // silently set up an inner model
     _[key] = makeModel(descriptorValue, ctx);
   } else if (isPrimitive) {
-    // silently set up an inner model
+    // silently set up an inner initial value
     _[key] = descriptorValue;
   } else if (descriptorValue && descriptorValue.hasOwnProperty(__VALUE)) {
     // set the default value
@@ -351,7 +353,7 @@ function createModelDescriptors(parent) {
       writable: false,
       configurable: false
     }
-  }, mdl);
+  }, modelDescriptors);
 
   return descriptors;
 }
@@ -359,7 +361,7 @@ function createModelDescriptors(parent) {
 function createModel(parent) {
   var descriptors = createModelDescriptors(parent);
   var model = Object.create({}, descriptors);
-
+  
   emitter(model);
 
   return model;
