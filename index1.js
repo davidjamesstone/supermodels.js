@@ -30,53 +30,53 @@ var util = {
     if (!type) {
       return value;
     }
-    
+
     switch (type) {
-    case String:
-      {
-        if (value === undefined || value === null || util.typeOf(value) === 'string') {
+      case String:
+        {
+          if (value === undefined || value === null || util.typeOf(value) === 'string') {
+            return value;
+          }
+          return value.toString && value.toString();
+        }
+        break;
+      case Number:
+        {
+          if (value === undefined || value === null) {
+            return NaN;
+          }
+          if (util.typeOf(value) === 'number') {
+            return value;
+          }
+          return Number(value);
+        }
+        break;
+      case Boolean:
+        {
+          if (!value) {
+            return false;
+          }
+          var falsey = ['0', 'false', 'off', 'no'];
+          return falsey.indexOf(value) === -1;
+        }
+        break;
+      case Date:
+        {
+          if (value === undefined || value === null || util.typeOf(value) === 'date') {
+            return value;
+          }
+          return new Date(value);
+        }
+        break;
+      case Object:
+      case Function:
+        {
           return value;
         }
-        return value.toString && value.toString();
-      }
-      break;
-    case Number:
-      {
-        if (value === undefined || value === null) {
-          return NaN;
-        }
-        if (util.typeOf(value) === 'number') {
-          return value;
-        }
-        return Number(value);
-      }
-      break;
-    case Boolean:
-      {
-        if (!value) {
-          return false;
-        }
-        var falsey = ['0', 'false', 'off', 'no'];
-        return falsey.indexOf(value) === -1;
-      }
-      break;
-    case Date:
-      {
-        if (value === undefined || value === null || util.typeOf(value) === 'date') {
-          return value;
-        }
-        return new Date(value);
-      }
-      break;
-    case Object:
-    case Function:
-      {
-        return value;
-      }
-    default:
-      throw new Error('Invalid cast');
-  }
-},
+      default:
+        throw new Error('Invalid cast');
+    }
+  },
 };
 
 function resolve(value) {
@@ -96,15 +96,15 @@ function resolve(value) {
 
 function createSetter(key, fn, type) {
   return function(value) {
-    
+
     var oldValue = this.__[key];
-  
+
     if (fn) {
       fn.call(this, value);
     } else {
       this.__[key] = util.cast(value, type);
     }
-  
+
     var newValue = this.__[key];
   };
 }
@@ -119,11 +119,11 @@ function createFromDescriptor(key, obj) {
   var data;
   var descriptor = Object.getOwnPropertyDescriptor(obj, key);
   var descriptorValue = resolve(descriptor.value);
-  
+
   if (util.isSimple(descriptorValue)) {
     data = {};
     data.__value = descriptorValue;
-      
+
     if (descriptor.get) {
       data.__get = descriptor.get;
     }
@@ -133,19 +133,19 @@ function createFromDescriptor(key, obj) {
     if (descriptor.configurable) {
       data.__configurable = true;
     }
-    
+
   } else {
     data = descriptorValue;
-    
+
     // '__' take priority over the natural descriptor settings if there are any
     if (descriptor.configurable === true && descriptorValue.__configurable !== false) {
       data.__configurable = true;
     }
   }
-  
+
   return data;
 }
-  
+
 function SchemaItem(obj) {
 
   // // If it's anything other than an object or an
@@ -154,7 +154,7 @@ function SchemaItem(obj) {
   //   this.value = obj;
   //   return;  
   // }
-  
+
   var self = this;
   var __VALIDATORS = '__validators';
   var __VALUE = '__value';
@@ -166,39 +166,41 @@ function SchemaItem(obj) {
   var __CONFIGURABLE = '__configurable';
   var __ENUMERABLE = '__enumerable';
   var __SPECIAL_PROPS = [__VALIDATORS, __VALUE, __TYPE, __DISPLAYNAME, __INIT, __GET, __SET, __CONFIGURABLE, __ENUMERABLE];
-  
-  var keys = Object.keys(obj), count = 0, i;
-  
+
+  var keys = Object.keys(obj),
+    count = 0,
+    i;
+
   function checkSchemaKey(keyName) {
     var name = keyName.substr(2);
     if (keyName in obj) {
-       count++;
-       self[name] = obj[keyName];
+      count++;
+      self[name] = obj[keyName];
     }
   }
 
   for (i = 0; i < __SPECIAL_PROPS.length; i++) {
     checkSchemaKey(__SPECIAL_PROPS[i]);
   }
-  
+
   if (this.value) {
     // cast the default value
     this.value = this.type ? util.cast(this.value, this.type) : this.value;
     return;
   }
-  
+
   if (this.type === Array) {
     this.isArray = true;
-  } 
-  
+  }
+
   if (util.isArray(obj)) {
     this.isArray = true;
     if (obj.length === 1) {
       this.subSchema = obj[0];
     }
   }
-  
-  
+
+
   if (!this.type) {
     var childKeys = keys.filter(function(item) {
       return __SPECIAL_PROPS.indexOf(item) === -1;
@@ -213,15 +215,20 @@ function SchemaItem(obj) {
 }
 
 function Schema(obj) {
-  var schemaItems = Object.create(null), d = Object.create(null), v = [], f = Object.create(null), p;
-  
-  var keys = Object.keys(obj), key, i;
+  var schemaItems = Object.create(null),
+    d = Object.create(null),
+    v = [],
+    f = Object.create(null),
+    p;
+
+  var keys = Object.keys(obj),
+    key, i;
   var isArray = util.isArray(obj);
-  
+
   if (isArray && obj.length > 1) {
     throw new Error('Array schema [' + key + '] should have max length 1');
   }
-  
+
   for (i = 0; i < keys.length; i++) {
     key = keys[i];
     if (key === '0' && isArray) {
@@ -235,79 +242,79 @@ function Schema(obj) {
 
   var item;
   keys = Object.keys(schemaItems);
-  
+
   function addToProto(name, value) {
     if (!p) {
       p = {};
     }
     p[name] = value;
   }
-  
+
   for (i = 0; i < keys.length; i++) {
     key = keys[i];
     item = schemaItems[key];
-    
+
     if (util.isFunction(item.value)) {
       // Function Type
-      
+
       // Todo
       // Check it's not a supermodel ctor
       //
-      
+
       // Set the fn on the prototype
       addToProto(key, item.value);
-      
+
     } else if (item.isArray) {
       // Array
-      
+
       // Set a descriptor property
       d[key] = {
         enumerable: item.enumerable === false ? false : true,
         configurable: item.configurable
       };
-      
+
       // set the default
       f[key] = new Schema(obj[key]);
-      
+
       // Every Array type gets a getter and
       // a setter if delcared as `writable`
       d[key].get = item.get || createGetter(key);
       if (item.writable === true) {
         d[key].set = createSetter(key, item.set, item.type);
       }
-      
+
     } else if (item.children) {
       // Object
-      
+
       // Set a descriptor property
       d[key] = {
         enumerable: item.enumerable === false ? false : true,
         configurable: item.configurable
       };
-      
+
       // set the default
       f[key] = new Schema(item.children);
-      
+
       // Every Object type gets a getter and
       // a setter if delcared as `writable`
       d[key].get = item.get || createGetter(key);
       if (item.writable === true) {
         d[key].set = createSetter(key, item.set, item.type);
       }
-      
+
     } else {
-      
+
       // Value Type
-      
+
       // Set a descriptor property
       d[key] = {
         enumerable: item.enumerable === false ? false : true,
         configurable: item.configurable
       };
-      
+
       // set the default
       f[key] = item.value;
-      
+
       // Every value type gets a getter
       // and setter unless declared otherwise
       d[key].get = item.get || createGetter(key);
@@ -316,7 +323,7 @@ function Schema(obj) {
       }
     }
   }
-  
+
   this.isArray = isArray;
   this.propertyDescriptors = d;
   this.validators = v;
@@ -326,46 +333,46 @@ function Schema(obj) {
 
 function applySchema(def) {
 
-    // Give me some internal data
-    Object.defineProperties(this, {
-      __: {
-        value: {}
-      }
-    });
-    
-    // Apply any property descriptors
-    Object.defineProperties(this, def.propertyDescriptors);
-    
-    // Apply any default values
-    var defaultValue, model;
-    for (var defaultValueKey in def.defaultValues) {
-      
-      defaultValue = def.defaultValues[defaultValueKey];
-      
-      if (defaultValue instanceof Schema) {
-        model = defaultValue.isArray ? createArray(defaultValue.Model) : {};
-        applySchema.call(model, defaultValue);
-        this.__[defaultValueKey] = model;
-      } else {
-        // silently set up default value
-        this.__[defaultValueKey] = defaultValue;
-      }
+  // Give me some internal data
+  Object.defineProperties(this, {
+    __: {
+      value: {}
     }
-    
-    if (def.isArray && def.Model) {
-      this.create = function() {
-        return new def.Model();
-      }
+  });
+
+  // Apply any property descriptors
+  Object.defineProperties(this, def.propertyDescriptors);
+
+  // Apply any default values
+  var defaultValue, model;
+  for (var defaultValueKey in def.defaultValues) {
+
+    defaultValue = def.defaultValues[defaultValueKey];
+
+    if (defaultValue instanceof Schema) {
+      model = defaultValue.isArray ? createArray(defaultValue.Model) : {};
+      applySchema.call(model, defaultValue);
+      this.__[defaultValueKey] = model;
+    } else {
+      // silently set up default value
+      this.__[defaultValueKey] = defaultValue;
     }
+  }
+
+  if (def.isArray && def.Model) {
+    this.create = function() {
+      return new def.Model();
+    }
+  }
 }
 
 function createArray(Model) {
   var arr = [];
-  
+
   if (Model) {
     overrideEmitterArrayAddingMutators(arr, Model);
   }
-  
+
   return arr;
 }
 
@@ -413,40 +420,234 @@ function overrideEmitterArrayAddingMutators(arr, obj) {
   }
 }
 
-function supermodels(schema, init, parent) {
+function superModel(model) {
   
+  if (model._isSimple) {
+    return model;
+  }
+  
+  var ctx = model._isArray ? [] : {};
+
+  var value = model.value;
+  var keys = Object.keys(value);
+
+  keys.forEach(function(key) {
+    var prop = value[key];
+    if (prop._isSimple) {
+      Object.defineProperty(this, key, {
+        get: function() {
+          return prop.value;
+        },
+        set: function(value) {
+          prop.value = value;
+        }
+      });
+    } else {
+      var obj = superModel(prop);
+      Object.defineProperty(this, key, {
+        get: function() {
+          return obj;
+        }
+      });
+    }
+  }, ctx);
+
+  return ctx;
+}
+
+function Model(schema) {
+  this.validators = schema.validators;
+  
+  if (schema.type) {
+    
+    this._type = schema.type;
+    
+    if (schema.type === Object) {
+
+      var val = {};
+      if (schema.keys) {
+        var keys = Object.keys(schema.keys);
+        for (var i = 0; i < keys.length; i++) {
+          val[keys[i]] = new Model(schema.keys[keys[i]]);
+        }
+      }
+      this.value = val;
+      
+    } else if (schema.type === Array) {
+      
+      this._isArray = true;
+      
+      var val = [];
+      if (schema.keys) {
+        var keys = Object.keys(schema.keys);
+        for (var i = 0; i < keys.length; i++) {
+          val[keys[i]] = new Model(schema.keys[keys[i]]);
+        }
+      }
+      this.value = val;
+
+    } else if (schema.type === Function) {
+      
+      var val = function() {};
+      if (schema.keys) {
+        var keys = Object.keys(schema.keys);
+        for (var i = 0; i < keys.length; i++) {
+          val[keys[i]] = new Model(schema.keys[keys[i]]);
+        }
+      }
+      this.value = val;
+
+    } else if (~[String, Number, Date, Boolean].indexOf(schema.type)) {
+      
+      this._isSimple = true;
+      this._cast = util.cast;
+      this.value = schema.defaultValue;
+      
+    }
+  } else {
+    this._isSimple = true;
+    this.value = schema.defaultValue;
+  }
+}
+Object.defineProperties(Model.prototype, {
+  value: {
+    get: function() {
+      return this._value;
+    },
+    set: function(value) {
+      this._value = this._cast ? this._cast(value, this._type) : value;
+    }
+  }
+});
+
+var m = new Model({
+  type: Number,
+  defaultValue: '3'
+});
+var m1 = new Model({
+  type: String,
+  defaultValue: 3
+});
+var m2 = new Model({
+  type: Object,
+  validators: []
+});
+var m3 = new Model({
+  type: Object,
+  keys: {
+    a: {
+      defaultValue: 1
+    },
+    b: {
+      type: Number,
+      defaultValue: '1'
+    }
+  },
+  validators: []
+});
+var m4 = new Model({
+  type: Array,
+  keys: {
+    a: {
+      defaultValue: 1
+    },
+    b: {
+      type: Number,
+      defaultValue: '1'
+    },
+    c: {
+      type: Array,
+      keys: {
+        c1: {
+          defaultValue: 1
+        },
+        c2: {
+          type: Number,
+          defaultValue: '1'
+        }
+      },
+      validators: []
+    }
+  },
+  validators: []
+});
+
+var model = new Model({
+  type: Object,
+  keys: {
+    a: {
+      defaultValue: 1
+    },
+    b: {
+      type: Number,
+      defaultValue: '1'
+    },
+    c: {
+      type: Object,
+      keys: {
+        x: {
+          type: String,
+          defaultValue: 'defaultstr'
+        },
+        y: {
+          type: Number,
+          defaultValue: 'defaultnumber->NaN'
+        },
+        z: {
+          type: Object,
+          keys: {
+            leaf1: {
+              type: String,
+              defaultValue: 'defaultstr'
+            },
+            leaf2: {
+              type: Number,
+              defaultValue: 'defaultnumber->NaN'
+            }
+          }
+        }
+      }
+    }
+  },
+  validators: []
+});
+  
+var s = new superModel(m4)
+
+function supermodels(schema, init, parent) {
+
   if (util.isObject(init)) {
     parent = init;
     init = null;
   }
-  
+
   var def = new Schema(schema);
-  
+
   // declare a constructor
   // for the model to be created
   var fn = function() {
     var ctx = def.isArray ? createArray(def.Model) : this;
-    
+
     applySchema.call(ctx, def, init);
-    
+
     // Call any initializer
     if (init) {
       init.apply(ctx, arguments);
     }
-    
+
     return ctx;
-    
+
   };
 
   // Set any prototype
   if (def.prot) {
     fn.prototype = def.prot;
   }
-  
+
   fn.__ctor = true;
-  
+
   return fn;
-  
+
 }
 
 
@@ -461,7 +662,7 @@ function supermodels(schema, init, parent) {
 //   // is an sm ctor, proxy to that 
 //   // instead onf an internal implementation
 //   var line = this.create();
-  
+
 //   //...
 // };
 // orderLinesSchema.quantityTotal = {
@@ -577,10 +778,12 @@ var Address = supermodels(addressSchema, function(data) {
   if (!data) {
     return;
   }
-  
+
   this.line1 = data.line1;
 });
-var addressData = { line1: 'sdff' };
+var addressData = {
+  line1: 'sdff'
+};
 var address = new Address(addressData);
 
 // var personSchema = {

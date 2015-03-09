@@ -1,30 +1,30 @@
-<script src="../xx.js"></script>
+<script src="../index3.min.js"></script>
 <script>
-  var a = [{line1: String}];
+  // var a = [{line1: String}];
   
-  var o = {
-    a: null,
-    b: {
-      __type: String,
-      __validators: [],
-      __value: 3
-    },
-    c: Number,
-    d: [],
-    e: [1],
-    f: [{ a: 1, b: 2, c: undefined, d: [{}] }],
-    g: { __type: Array, __validators: [] },
-    h: [Number],
-    i: Array,
-    j: {
-      __type: String,
-      __validators: [],
-      __value: 3,
-      somethingElse: {
+  // var o = {
+  //   a: null,
+  //   b: {
+  //     __type: String,
+  //     __validators: [],
+  //     __value: 3
+  //   },
+  //   c: Number,
+  //   d: [],
+  //   e: [1],
+  //   f: [{ a: 1, b: 2, c: undefined, d: [{}] }],
+  //   g: { __type: Array, __validators: [] },
+  //   h: [Number],
+  //   i: Array,
+  //   j: {
+  //     __type: String,
+  //     __validators: [],
+  //     __value: 3,
+  //     somethingElse: {
         
-      }
-    }
-  }
+  //     }
+  //   }
+  // }
   
   // var s = [];
   // for (var prop in o) {
@@ -32,4 +32,106 @@
   // }
   // new Schema(o);
   
+// a = {
+//   __type: Array,
+//   egg: Number,
+//   foo: Object,
+//   fn: function() {}
+// };
+
+// b = {
+//   __type: Object,
+//   egg: Number,
+//   foo: Object,
+//   fn: function() {}
+// };
+
+// c = {
+//   __type: [Number],
+//   egg: Number,
+//   foo: Object,
+//   fn: function() {}
+// };
+
+// d = [{
+//   egg: { __type: Number, __value: 3 },
+//   foo: { __type: Number, __value: 4 },
+// }];
+
+// e = {
+//   __type: Object,
+//   foo: Object
+// };
+
+// f = {
+//   __type: Number,
+//   __validators: [],
+//   foo: Object // ignored
+// };
+
+// g = {
+//   __type: Number,
+//   __value: 8
+// };
+
+// h = {
+//   __value: 8
+// };
+
+// i = {
+//   line1: String,
+//   line2: String,
+//   latLong: {
+//     lat: {
+//       __type: Number,
+//       __validators: [0, 0]
+//     },
+//     long: {
+//       __type: Number,
+//       __validators: [0, 0]
+//     }
+//   }
+// };
+
+// j = [Number];
+
+// d = createDef(i);
+// add = d.value();
+// add.on('change', function(e) {
+//   console.log('change');
+// });
+
+// d1 = createDef(d);
+
+
+
+// x = { __type: Number, __value: 3 };
+// x1 = { a: String, b: String };
+var mustBe1 = function(value) {
+  if (value !== 1) {
+    return 'Must be 1';
+  }
+}
+
+var simpleSchema = { __type: Number, __value: Date.now, __validators: [mustBe1] };
+var SimpleModel = supermodels(simpleSchema, function(data) {});
+// var simpleInstance = SimpleModel({ a: 1 });
+
+// var objSchema = { a: String, b: String };
+// var ObjectModel = supermodels(objSchema, function(data) {
+//   data = data || {};
+//   this.a = data.a;
+//   this.b = data.b;
+// });
+// var objInstance = ObjectModel({ a: 1 });
+
+// var arrSchema = [{__type: Number}];
+// var ArrModel = supermodels(arrSchema, function(data) {});
+// var arrInstance = new ArrModel({ a: 1 });
+
+var complexSchema = { /*a: ArrModel, b: ObjectModel,*/ c: SimpleModel };
+var ComplexModel = supermodels(complexSchema);
+var complexModel = new ComplexModel();
+
+
 </script>
