@@ -1,7 +1,11 @@
 # supermodels.js
 
-  Turn plain old javascript objects into observable, traversable and validatable supermodels
-
+  Turn plain old javascript objects into observable, traversable, validatable and composable supermodels.
+  
+  They can be used for all sorts of purposes including the `M` and `C` in an MVC paradigm or for defining your 
+  Business Objects (Customer, Address, Order ect.).
+  
+  For use in Node.js, the browser (5Kb gzipped) or any other JavaScript environment.
 
 ## API
 
@@ -18,6 +22,7 @@ var model = supermodels({
 model.a
 // => 1
 =======
+
 #### Simple example
 ```js
 var simpleSchema = {

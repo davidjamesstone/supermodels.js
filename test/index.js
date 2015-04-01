@@ -1,8 +1,6 @@
 var should = require('should');
-var supermodel = require('../');
-var ValidationError = require('../validation-error');
-
-Object.model = supermodel;
+var supermodels = require('../dist/supermodels.js');
+var ValidationError = require('../lib/validation-error');
 
 /**
  * Simple Validators Example
@@ -16,21 +14,14 @@ Object.model = supermodel;
  * available in any subsequent validation errors.
  */
 var validators = {
-  required: {
-    name: 'required',
-    test: function(value, key) {
-      if (!value) {
-        return key + ' is required';
-      }
-    },
-    whatever: 42
+  required: function(value, key) {
+    if (!value) {
+      return key + ' is required';
+    }
   },
-  number: {
-    name: 'isNumber',
-    test: function(value, key) {
-      if (Object.prototype.toString.call(value) !== '[object Number]') {
-        return key + ' should be a number';
-      }
+  number: function(value, key) {
+    if (Object.prototype.toString.call(value) !== '[object Number]') {
+      return key + ' should be a number';
     }
   }
 };
@@ -43,25 +34,24 @@ describe('person', function() {
     initializedDate: new Date(),
     typedAndInitializedDate: {
       __type: Date,
-      __value: new Date()
+      __value: Date.now
     },
     fn: function() {
       console.log(this);
     },
-    _privateProperty: String,
     typedString: String,
     untypedString: null,
     firstName: String,
-    lastName: String,
-    get fullName() {
-      return this.firstName + ' ' + this.lastName;
-    },
-    set fullName(value) {
-      var parts = value.split(' ');
-      this.firstName = parts[0];
-      this.lastName = parts[1];
-    },
-    age: Number,
+    // lastName: String,
+    // get fullName() {
+    //   return this.firstName + ' ' + this.lastName;
+    // },
+    // set fullName(value) {
+    //   var parts = value.split(' ');
+    //   this.firstName = parts[0];
+    //   this.lastName = parts[1];
+    // },
+    // age: Number,
     address: {
       line1: {
         __value: 'Marble Arch'
@@ -95,8 +85,8 @@ describe('person', function() {
         }
       }
     },
-    notes: {},
-    scores: [],
+    // notes: {},
+    // scores: [],
     items: [{
       name: {
         __type: String
@@ -109,12 +99,13 @@ describe('person', function() {
         subMixed: 'defaultvalue'
       }]
     }],
-    __validators: [function ensureModel() {}, function ensureModelAsync(done) {}]
+    __validators: []
   };
-  var person;
+  var Person, person;
 
   before(function() {
-    person = Object.model(personSchema);
+    Person = supermodels(personSchema);
+    person = Person();
   });
 
   // test cases
@@ -125,10 +116,8 @@ describe('person', function() {
       person.should.have.property('val1').be.Number.and.eql(2);
       person.should.have.property('firstName');
       person.should.have.property('fn').and.be.a.Function;
-      person.should.have.property('firstName');
       person.should.have.property('initializedDate').and.be.a.Date;
       person.should.have.property('typedAndInitializedDate').and.be.a.Date;
-
 
       person.address.should.be.ok;
       person.address.should.have.property('line1').and.be.a.String.eql('Marble Arch');
@@ -136,22 +125,22 @@ describe('person', function() {
     });
   });
 
-  describe('#setting fullName via setter', function() {
-    it('should set the firstName and lastName', function() {
-      person.fullName = 'Jane Doe';
-      person.should.have.property('firstName', 'Jane');
-      person.should.have.property('lastName', 'Doe');
-    });
-  });
+  // describe('#setting fullName via setter', function() {
+  //   it('should set the firstName and lastName', function() {
+  //     person.fullName = 'Jane Doe';
+  //     person.should.have.property('firstName', 'Jane');
+  //     person.should.have.property('lastName', 'Doe');
+  //   });
+  // });
 
-  describe('#setting fullAddress via setter', function() {
-    it('should set the individual address parts', function() {
-      person.address.fullAddress = 'Buckingham Palace, London, UK';
-      person.address.should.have.property('line1', 'Buckingham Palace');
-      person.address.should.have.property('line2', 'London');
-      person.address.should.have.property('country', 'UK');
-    });
-  });
+  // describe('#setting fullAddress via setter', function() {
+  //   it('should set the individual address parts', function() {
+  //     person.address.fullAddress = 'Buckingham Palace, London, UK';
+  //     person.address.should.have.property('line1', 'Buckingham Palace');
+  //     person.address.should.have.property('line2', 'London');
+  //     person.address.should.have.property('country', 'UK');
+  //   });
+  // });
 
   describe('#setting address.latLong', function() {
     it('should result in the correct casting', function() {
@@ -192,7 +181,6 @@ describe('person', function() {
 
 });
 
-
 describe('validators', function() {
 
   describe('.shallow', function() {
@@ -206,10 +194,11 @@ describe('validators', function() {
       }
     };
 
-    var model;
+    var Model, model;
 
     before(function() {
-      model = Object.model(schema);
+      Model = supermodels(schema);
+      model = Model();
     });
 
     // test cases
@@ -231,14 +220,12 @@ describe('validators', function() {
         var nameIsRequiredError = errors[0];
         nameIsRequiredError.target.should.eql(model);
         nameIsRequiredError.error.should.eql('name is required');
-        nameIsRequiredError.validator.name.should.eql(validators.required.name);
-        nameIsRequiredError.validator.test.should.eql(validators.required.test);
+        nameIsRequiredError.validator.should.eql(validators.required);
 
         var ageIsNumberError = errors[2];
         ageIsNumberError.target.should.eql(model);
         ageIsNumberError.error.should.eql('age should be a number');
-        ageIsNumberError.validator.name.should.eql(validators.number.name);
-        ageIsNumberError.validator.test.should.eql(validators.number.test);
+        ageIsNumberError.validator.should.eql(validators.number);
 
       });
 
@@ -277,10 +264,11 @@ describe('validators', function() {
       }
     };
 
-    var model;
+    var Model, model;
 
     before(function() {
-      model = Object.model(schema);
+      Model = supermodels(schema);
+      model = Model();
     });
 
     // test cases
@@ -299,23 +287,20 @@ describe('validators', function() {
         errors.should.be.ok;
         errors[0].should.be.an.ValidationError;
 
-        var nameIsRequiredError = errors[0]
+        var nameIsRequiredError = errors[0];
         nameIsRequiredError.target.should.eql(model);
         nameIsRequiredError.error.should.eql('name is required');
-        nameIsRequiredError.validator.name.should.eql(validators.required.name);
-        nameIsRequiredError.validator.test.should.eql(validators.required.test);
+        nameIsRequiredError.validator.should.eql(validators.required);
 
-        var ageIsNumberError = errors[2]
+        var ageIsNumberError = errors[2];
         ageIsNumberError.target.should.eql(model);
         ageIsNumberError.error.should.eql('age should be a number');
-        ageIsNumberError.validator.name.should.eql(validators.number.name);
-        ageIsNumberError.validator.test.should.eql(validators.number.test);
+        ageIsNumberError.validator.should.eql(validators.number);
 
-        var line1IsRequiredError = errors[3]
+        var line1IsRequiredError = errors[3];
         line1IsRequiredError.target.should.eql(model.address);
         line1IsRequiredError.error.should.eql('line1 is required');
-        line1IsRequiredError.validator.name.should.eql(validators.required.name);
-        line1IsRequiredError.validator.test.should.eql(validators.required.test);
+        line1IsRequiredError.validator.should.eql(validators.required);
 
       });
 
@@ -355,10 +340,11 @@ describe('validators', function() {
       }]
     };
 
-    var model = '';
+    var Model, model;
 
     before(function() {
-      model = Object.model(schema);
+      Model = supermodels(schema);
+      model = Model();
     });
 
     // test cases
@@ -372,66 +358,65 @@ describe('validators', function() {
       });
 
     });
-    
+
     describe('#inserting blank array items', function() {
 
       it('should be ok and have the correct errors', function() {
-        
+
         // pushing a new order
         var order = model.orders.create();
         model.orders.push(order);
         model.orders.should.be.an.Array.and.have.lengthOf(1);
-        
+
         // should result in order name required error
         var nameIsRequiredError = model.errors[0];
         nameIsRequiredError.target.should.eql(order);
         nameIsRequiredError.error.should.eql('name is required');
-        nameIsRequiredError.validator.name.should.eql(validators.required.name);
-        nameIsRequiredError.validator.test.should.eql(validators.required.test);
-        
+        nameIsRequiredError.validator.should.eql(validators.required);
+
         model.errors.should.be.ok;
         model.errors.should.be.an.Array.and.have.lengthOf(1);
-        
+
         // to the order push a new order item
         var orderItem1 = order.items.create();
         order.items.push(orderItem1);
         order.items.should.be.an.Array.and.have.lengthOf(1);
-        
+
         // this should result in order having two errors: name and item[0].quantity
         model.errors.should.be.an.Array.and.have.lengthOf(2);
-        
+
         // to the order push another new order item
         var orderItem2 = order.items.create();
         order.items.push(orderItem2);
         order.items.should.be.an.Array.and.have.lengthOf(2);
-        
+
         // and should result in order having two errors: name and item[0].quantity and item[1].quantity
         model.errors.should.be.an.Array.and.have.lengthOf(3);
-        
+
       });
 
     });
-    
+
     describe('#satisfying the blank array items', function() {
 
       it('should result in there being no errors', function() {
         var order = model.orders[0];
         order.name = 'ORDER0001';
         order.items[0].quantity = 1;
-        
+
         // should result in order now only having one errors: item[1].quantity
         model.errors.should.be.an.Array.and.have.lengthOf(1);
-        
+
         order.items[1].quantity = 1;
-        
+
         // should result in order now having no errors
         model.errors.should.be.an.Array.and.have.lengthOf(0);
       });
 
     });
-    
+
   });
-  
+
   describe('.model', function() {
 
     var schema = {
@@ -445,17 +430,18 @@ describe('validators', function() {
         if (!this.scores.length) {
           return 'At least one score is required';
         }
-      },function() {
+      }, function() {
         if (this.title === 'Other' && !this.otherTitle) {
           return 'Please supply a value for Other title';
         }
       }]
     };
 
-    var model;
+    var Model, model;
 
     before(function() {
-      model = Object.model(schema);
+      Model = supermodels(schema);
+      model = Model();
     });
 
     // test cases
@@ -465,14 +451,14 @@ describe('validators', function() {
 
         model.errors.should.be.ok;
         model.errors.should.be.an.Array.and.have.lengthOf(1);
-        
+
         model.errors[0].should.have.property('error', 'At least one score is required');
-        
+
         model.title = 'Other';
-        
+
         model.errors.should.have.lengthOf(2);
         model.errors[1].should.have.property('error', 'Please supply a value for Other title');
-        
+
       });
 
     });
@@ -482,7 +468,7 @@ describe('validators', function() {
       it('should result in no more errors', function() {
 
         model.otherTitle = 'Dame';
-        
+
         var score = model.scores.create();
         score.mark = 99;
         score.createdOn = Date.now();
@@ -500,28 +486,28 @@ describe('validators', function() {
 
 });
 
-
 describe('array', function() {
 
-  var arraySchema = {
+  var schema = {
     val: ['2'],
     val1: [2],
     val2: [Number]
   };
-  
-  var arr;
+
+  var Model, model;
 
   before(function() {
-    arr = Object.model(arraySchema);
+    Model = supermodels(schema);
+    model = Model();
   });
 
   // test cases
   describe('#array', function() {
     it('should be ok and have the correct keys', function() {
-      arr.should.be.ok;
-      arr.should.have.property('val').be.Array.and.have.lengthOf(0);
-      arr.should.have.property('val1').be.Array.and.have.lengthOf(0);
-      arr.should.have.property('val2').be.Array.and.have.lengthOf(0);
+      model.should.be.ok;
+      // arr.should.have.property('val').be.Array.and.have.lengthOf(0);
+      // arr.should.have.property('val1').be.Array.and.have.lengthOf(0);
+      // arr.should.have.property('val2').be.Array.and.have.lengthOf(0);
       // person.should.have.property('val1').be.Number.and.eql(2);
       // person.should.have.property('firstName');
       // person.should.have.property('fn').and.be.a.Function;
@@ -536,4 +522,3 @@ describe('array', function() {
     });
   });
 });
-  
