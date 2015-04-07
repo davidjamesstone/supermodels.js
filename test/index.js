@@ -505,9 +505,12 @@ describe('array', function() {
   describe('#array', function() {
     it('should be ok and have the correct keys', function() {
       model.should.be.ok;
-      // arr.should.have.property('val').be.Array.and.have.lengthOf(0);
-      // arr.should.have.property('val1').be.Array.and.have.lengthOf(0);
-      // arr.should.have.property('val2').be.Array.and.have.lengthOf(0);
+      model.should.have.property('val').be.Array.and.have.lengthOf(0);
+      model.should.have.property('val1').be.Array.and.have.lengthOf(0);
+      model.should.have.property('val2').be.Array.and.have.lengthOf(0);
+      
+      model.val1.push(1);
+      console.log(model.val1.length);
       // person.should.have.property('val1').be.Number.and.eql(2);
       // person.should.have.property('firstName');
       // person.should.have.property('fn').and.be.a.Function;
