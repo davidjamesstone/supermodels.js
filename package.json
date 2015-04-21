@@ -1,10 +1,11 @@
 {
   "name": "supermodels.js",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Turn plain old javascript objects into observable, traversable, validatable and composable supermodels.",
   "main": "index.js",
   "scripts": {
     "test": "mocha ./test",
+    "tape": "tape ./tape/*.js",
     "build": "npm run jshint && npm run build:js && npm run build:js-min",
     "build:js": "browserify index.js --standalone supermodels > ./dist/supermodels.js  -d",
     "build:js-min": "browserify index.js --standalone supermodels | uglifyjs --screw-ie8 --mangle > ./dist/supermodels.min.js",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "should": "^4.4.2",
-    "browserify": "^8.1.0"
+    "browserify": "^8.1.0",
+    "tape": "^4.0.0"
   }
 }
