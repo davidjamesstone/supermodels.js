@@ -27,7 +27,7 @@ test('creating an model instance from a supermodel', function(t) {
     a: String,
     b: Number,
     c: 42
-  }
+  };
 
   var Model = supermodels(schema);
   var model = new Model();
