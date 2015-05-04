@@ -21,13 +21,7 @@
     "url": "https://github.com/davidjamesstone/supermodels.js/issues"
   },
   "homepage": "https://github.com/davidjamesstone/supermodels.js",
-  "dependencies": {
-    "emitter-object": "davidjamesstone/emitter-object",
-    "emitter-event": "davidjamesstone/emitter-event",
-    "emitter-array": "davidjamesstone/emitter-array"
-  },
   "devDependencies": {
-    "should": "^4.4.2",
     "browserify": "^8.1.0",
     "tape": "^4.0.0"
   }
