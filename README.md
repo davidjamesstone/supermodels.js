@@ -116,7 +116,7 @@ person.on('change:address.latLong.lat', function(e) {});
 ### Traversing
 
   The following properties are available at each level of the supermodel object (person) to help navigate
-  `__name`, `__parent`, `__ancestors`, `__descendants`, `__keys`, `__children`, `__isRoot`, `__hasAncestors`, `__path`, `__hasDecendants`
+  `__name`, `__parent`, `__ancestors`, `__descendants`, `__keys`, `__children`, `__isRoot`, `__hasAncestors`, `__path`, `__hasDescendants`
 
  ```js
  person.__isRoot;

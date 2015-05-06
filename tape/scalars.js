@@ -1,7 +1,40 @@
 var test = require('tape');
 var supermodels = require('../');
 
-test('array', function(t) {
+test('scalar', function(t) {
+  t.plan(2);
+
+  function range(min, max) {
+
+    return function(value, key) {
+      if (value < min || value > max) {
+        return {
+          key: key,
+          some: 'range error happened, return anything truthy'
+        };
+      }
+    }
+  };
+
+  var schema = {
+    __type: Number,
+    __value: 42,
+    __validators: [range(0, 100)]
+  };
+
+  var PercentModel = supermodels(schema);
+  var model = new PercentModel();
+
+  t.equal(model.value, 42);
+
+  model.value = '-1';
+  t.equal(model.value, -1);
+
+  //t.equal(model.errors.length, 1);
+
+});
+
+test('scalar array', function(t) {
   t.plan(9);
 
   var schema = {

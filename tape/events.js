@@ -165,7 +165,7 @@ test('array scalar events 2', function(t) {
 
 test('array object events', function(t) {
 
-  t.plan(5);
+  t.plan(7);
 
   var schema = {
     person: {
@@ -207,7 +207,12 @@ test('array object events', function(t) {
   // Composition is available as an alternative to this 
   // behaviour but might be surprising?
   var a1 = model.person.addresses.create();
-  a1.line1 = 'Buckingham Palace';
+
+  t.equal(eventCount, 4);
+  a1.line1 = 'Buckingham Palace'; // shouldn't cause any increment to eventCount
+  t.equal(eventCount, 4);
+
+  model.person.addresses.push(a1);
   t.equal(eventCount, 6);
 
   a1.line2 = 'London';
@@ -215,6 +220,5 @@ test('array object events', function(t) {
   a1.latLong.long = 100;
   t.equal(eventCount, 12);
 
-  model.person.addresses.push(a1);
   t.equal(model.person.addresses.length, 1);
 });
