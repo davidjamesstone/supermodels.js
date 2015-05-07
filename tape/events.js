@@ -199,13 +199,10 @@ test('array object events', function(t) {
   model.person.age = 42;
   t.equal(eventCount, 4);
 
-  // special `create` function attaches the
-  // factoried model (__parent is set).
-  // Events (and validation) are therefore active
-  // even though the item is not yet in the array
-  // TODO should this happen? Maybe should be an option?
-  // Composition is available as an alternative to this 
-  // behaviour but might be surprising?
+  // special `create` function
+  // factories a item model instance.
+  // Events (and validation) are not active
+  // because the item is not yet in the array
   var a1 = model.person.addresses.create();
 
   t.equal(eventCount, 4);

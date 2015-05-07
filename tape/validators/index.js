@@ -1,5 +1,5 @@
 /**
- * Define some simple validators
+ * Define some simple test validators
  */
 var validators = {
   required: function(value, key) {
