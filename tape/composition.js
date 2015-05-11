@@ -51,6 +51,7 @@ test('composition references', function(t) {
 
   t.equals(typeof customer.basket, 'undefined');
   customer.basket = new Basket();
+  var a = customer.basket.items
   t.equals(customer.basket.__parent, customer);
 
   customer.name = 'Jo Bloggs';
@@ -75,6 +76,7 @@ test('composition references', function(t) {
   // Shouud have length zero at first, then after 
   // adding a new basket item without the required
   // quantity, should sum 1. The error should propagate. 
+  debugger
   t.equals(customer.errors.length, 0);
 
   var basketItem2 = new BasketItem('P100');

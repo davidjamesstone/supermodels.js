@@ -51,7 +51,6 @@ test('mvc', function(t) {
     this.model = new FormModel();
   });
 
-  debugger
   var formCtrl = new FormCtrl();
   var formModel = formCtrl.model;
 

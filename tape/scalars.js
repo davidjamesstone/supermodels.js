@@ -25,10 +25,10 @@ test('scalar', function(t) {
   var PercentModel = supermodels(schema);
   var model = new PercentModel();
 
-  t.equal(model.value, 42);
+  t.equal(model.getValue(), 42);
 
-  model.value = '-1';
-  t.equal(model.value, -1);
+  model.setValue('-1');
+  t.equal(model.getValue(), -1);
 
   //t.equal(model.errors.length, 1);
 

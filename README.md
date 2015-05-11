@@ -1,27 +1,43 @@
 # supermodels.js
 
-  Turn plain old javascript objects into observable, traversable, validatable and composable supermodels.
-  
-  They can be used for all sorts of purposes including the `M` and `C` in an MVC paradigm or for defining your 
-  Business Objects (Customer, Address, Order ect.).
-  
-  For use in Node.js, the browser (5Kb gzipped) or any other JavaScript environment.
+Turn plain old javascript objects into observable, traversable, validatable and composable supermodels.
 
-## API
+They can be used for all sorts of purposes including:
 
-### supermodels(schema [, parent])
+ 1. Acting as the `M` and `C|P` in an MV* paradigm
+ 2. Defining your Business Objects (Customer, Address, Order etc.), their relationships and any validation rules.
 
-  Create a new model with the given `schema`.
+For use in Node.js, the browser (3Kb gzipped) or any other JavaScript environment.
+
+### supermodels(schema [, initializer])
+
+Returns a new model constructor function for the given `schema` value. The optional `initializer` can be passed as a function that will be called on creating each instance of a model.
 
 ```js
-var model = supermodels({
-  a: 1,
-  b: 2
-});
+var schema = {
+  name: String,
+  age: Number
+};
 
-model.a
-// => 1
-=======
+var initializer = function(name, age) {
+  this.name = name;
+  this.age = age;
+};
+
+var Person = supermodels(schema, initializer);
+
+var person = new Person('foo', 42);
+var person1 = new Person('bar', 43);
+
+// models are observable
+person.on('change', function(e) {});
+
+// models are validatable
+console.log(person.errors);
+// => [] Empty Array as we haven't defined any validators yet
+
+```
+Note: the `new` keyword is optional when calling `var person1 = new Person('foo', 42);`
 
 #### Simple example
 ```js
@@ -114,8 +130,7 @@ person.on('change:address.latLong.lat', function(e) {});
 ```
 
 ### Traversing
-
-  The following properties are available at each level of the supermodel object (person) to help navigate
+The following properties are available on each Object and Array of the model object to help navigate
   `__name`, `__parent`, `__ancestors`, `__descendants`, `__keys`, `__children`, `__isRoot`, `__hasAncestors`, `__path`, `__hasDescendants`
 
  ```js

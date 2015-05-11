@@ -1,1 +1,1 @@
-
+// Typed Collection Example

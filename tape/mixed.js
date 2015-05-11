@@ -87,6 +87,7 @@ test('mixed', function(t) {
     }],
     __validators: []
   };
+  debugger
   var Mixed = supermodels(mixedSchema);
   var mixed = Mixed();
 
