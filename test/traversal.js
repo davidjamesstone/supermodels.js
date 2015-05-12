@@ -14,7 +14,7 @@ test('traversal examples', function(t) {
     }]
   };
   var Model = supermodels(schema);
-  var model = Model();
+  var model = new Model();
 
   t.equal(model.__ancestors.length, 0);
   t.equal(model.__descendants.length, 3);
@@ -74,12 +74,12 @@ test('traversal examples 2', function(t) {
   // these following tests illustrates a subtle difference
   // between the two alternative ways of creating and
   // composing different models together.
-  // 
+  //
   var score = new Score();
   score.mark = 42;
   score.createdOn = Date.now();
 
-  // using the `new Score()` method the new Score instance 
+  // using the `new Score()` method the new Score instance
   // is not attached to the model until it's push onto the array.
   // It therefore doesn't have a name or path
   t.equal(score.__isRoot, true);

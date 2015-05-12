@@ -5,9 +5,9 @@ var supermodels = require('../');
 /*
  * Tests for models being composable.
  * Models can reference other Models
- * though properties and arrays. 
+ * though properties and arrays.
  * E.g.
- * customer.basket = <Basket> 
+ * customer.basket = <Basket>
  * basket.items = Array<BasketItem>
  */
 test('composition references', function(t) {
@@ -37,7 +37,7 @@ test('composition references', function(t) {
       var total = 0;
       for (var i = 0; i < this.items.length; i++) {
         total += this.items[i].quantity;
-      };
+      }
       return total;
     }
   });
@@ -51,7 +51,7 @@ test('composition references', function(t) {
 
   t.equals(typeof customer.basket, 'undefined');
   customer.basket = new Basket();
-  var a = customer.basket.items
+
   t.equals(customer.basket.__parent, customer);
 
   customer.name = 'Jo Bloggs';
@@ -73,10 +73,9 @@ test('composition references', function(t) {
 
 
   // Assert the errors are propagated correctly.
-  // Shouud have length zero at first, then after 
+  // Shouud have length zero at first, then after
   // adding a new basket item without the required
-  // quantity, should sum 1. The error should propagate. 
-  debugger
+  // quantity, should sum 1. The error should propagate.
   t.equals(customer.errors.length, 0);
 
   var basketItem2 = new BasketItem('P100');

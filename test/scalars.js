@@ -14,7 +14,7 @@ test('scalar', function(t) {
         };
       }
     }
-  };
+  }
 
   var schema = {
     __type: Number,
@@ -43,7 +43,7 @@ test('scalar array', function(t) {
     val2: [Number]
   };
   var Model = supermodels(schema);
-  var model = Model();
+  var model = new Model();
 
   t.equal(Array.isArray(model.val), true);
   t.equal(Array.isArray(model.val1), true);

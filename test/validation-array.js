@@ -19,9 +19,8 @@ test('simple field model validation', function(t) {
     }]
   };
 
-  var Model, model;
   var Model = supermodels(schema);
-  var model = Model();
+  var model = new Model();
 
   t.equal(model.errors.length, 0);
 
@@ -54,7 +53,7 @@ test('simple field model validation', function(t) {
   // and should result in order having two errors: name and item[0].quantity and item[1].quantity
   t.equal(model.errors.length, 3);
 
-  var order = model.orders[0];
+  order = model.orders[0];
   order.name = 'ORDER0001';
   order.items[0].quantity = 1;
 

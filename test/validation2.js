@@ -24,7 +24,7 @@ test('validation examples', function(t) {
     }]
   };
   var Model = supermodels(schema);
-  var model = Model();
+  var model = new Model();
 
   t.equal(model.errors.length, 1);
   t.equal(model.errors[0].error, 'At least one score is required');
@@ -56,7 +56,7 @@ test('validation examples 2', function(t) {
   };
 
   var Model = supermodels(schema);
-  var model = Model();
+  var model = new Model();
 
   //should be ok and have the correct length
   var errors = model.errors;
@@ -99,7 +99,7 @@ test('validation examples 2', function(t) {
   };
 
   var Model = supermodels(schema);
-  var model = Model();
+  var model = new Model();
 
   var errors = model.errors;
 

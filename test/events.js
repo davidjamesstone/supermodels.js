@@ -15,7 +15,7 @@ test('simple field level events', function(t) {
   var eventCount = 0;
 
   // attach 1st handler
-  model.on('change', function(e) {
+  model.on('change', function() {
     ++eventCount;
   });
 
@@ -26,17 +26,17 @@ test('simple field level events', function(t) {
   t.equal(eventCount, 2);
 
   // attach 2nd handler
-  model.on('change', function(e) {
+  model.on('change', function() {
     ++eventCount;
   });
 
   model.a = 'bar'; // should cause 2 events to be raised
   t.equal(eventCount, 4);
 
-  // A quick test to ensure 
+  // A quick test to ensure
   // events are instance specific
-  var model = new Model();
-  model.a = 'baz';
+  var model1 = new Model();
+  model1.a = 'baz';
   t.equal(eventCount, 4);
 });
 
@@ -53,7 +53,7 @@ test('array scalar events 1', function(t) {
 
   var eventCount = 0;
 
-  function eventCounter(e) {
+  function eventCounter() {
     ++eventCount;
   }
 
@@ -85,7 +85,7 @@ test('array scalar events 2', function(t) {
   var model = new Model();
   var eventCount = 0;
 
-  function eventCounter(e) {
+  function eventCounter() {
     //t.comment(e.name, e.path, e.detail);
     ++eventCount;
   }
@@ -186,7 +186,7 @@ test('array object events', function(t) {
   var model = new Model();
   var eventCount = 0;
 
-  function eventCounter(e) {
+  function eventCounter() {
     ++eventCount;
   }
 

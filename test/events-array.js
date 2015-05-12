@@ -9,9 +9,9 @@ test('array object events 1', function(t) {
   var model = new Person();
 
   /**
-   * `change` events are emitted on the 
+   * `change` events are emitted on the
    * model and to ancestors for all changes:
-   * set values, push, splice, pop etc. 
+   * set values, push, splice, pop etc.
    */
   model.on('change', function(e) {
     t.equal(e.name, 'set');
@@ -29,8 +29,8 @@ test('array object events 1', function(t) {
   });
 
   /**
-   * Specific events are emitted on the 
-   * current model only. In this case 
+   * Specific events are emitted on the
+   * current model only. In this case
    * the specific event is a `set` event.
    */
   model.person.on('set', function(e) {
@@ -69,8 +69,8 @@ test('array object events 2', function(t) {
   });
 
   /**
-   * Specific events are emitted on the 
-   * current model only. In this case 
+   * Specific events are emitted on the
+   * current model only. In this case
    * the specific event is a `push` event.
    */
   model.person.addresses.on('push', function(e) {

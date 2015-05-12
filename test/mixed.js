@@ -50,9 +50,6 @@ test('mixed', function(t) {
         __get: function() {
 
         },
-        __set: function(value) {
-
-        },
         __validators: []
       },
       get fullAddress() {
@@ -87,9 +84,9 @@ test('mixed', function(t) {
     }],
     __validators: []
   };
-  debugger
+
   var Mixed = supermodels(mixedSchema);
-  var mixed = Mixed();
+  var mixed = new Mixed();
 
   t.equal(mixed.val, '2');
   t.equal('firstName' in mixed, true);

@@ -7,7 +7,7 @@ test('mvc', function(t) {
   t.plan(4);
 
   // helpers
-  // 
+  //
   function required(name, type, otherValidators) {
     return {
       __type: type || String,
