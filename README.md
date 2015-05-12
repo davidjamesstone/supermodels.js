@@ -2,21 +2,36 @@
 
 Turn plain old javascript objects into observable, traversable, validatable and composable supermodels.
 
-They can be used for all sorts of purposes including:
+`npm install supermodels.js`
+
+supermodels can be used for all sorts of purposes including:
 
  1. Acting as the `M` and `C|P` in an MV* paradigm
  2. Defining your Business Objects (Customer, Address, Order etc.), their relationships and any validation rules.
-
+ 3. Building blocks like Services, Factories, Singletons.
+ 
 For use in Node.js, the browser (3Kb gzipped) or any other JavaScript environment.
 
 ### supermodels(schema [, initializer])
 
-Returns a new model constructor function for the given `schema` value. The optional `initializer` can be passed as a function that will be called on creating each instance of a model.
+Returns a model constructor function for the given `schema` value. The optional `initializer` can be passed as a function that will be called on creating each instance of a model.
 
 ```js
-var schema = {
+var customerSchema = {
   name: String,
-  age: Number
+  age: Number,
+  address: {
+    line1: String,
+    line2: String,
+    postcode: String,
+    get fullAddress() {
+      return this.line1 + ' ' + this.line2;
+    }
+  },
+  orders: [{
+    productCode: String,
+    quantity: Number
+  }]
 };
 
 var initializer = function(name, age) {
@@ -24,93 +39,117 @@ var initializer = function(name, age) {
   this.age = age;
 };
 
-var Person = supermodels(schema, initializer);
+// Call supermodels to get our Customer constructor
+var Customer = supermodels(customerSchema, initializer);
 
-var person = new Person('foo', 42);
-var person1 = new Person('bar', 43);
+// Call constructor like you would
+// Note the `new` keyword is optional
+var customer = new Customer('foo', 42);
+var customer1 = new Customer('bar', 43);
 
-// models are observable
-person.on('change', function(e) {});
+/*
+ * Models are observable
+ */
+customer.on('change', function(e) {
+  console.log(e.path, e.detail.newValue, e.detail.oldValue);
+});
+customer.address.line1 = 'Line 1';
+customer.address.line1 = 'Line 2';
+
+// Listeners can be added to any level of the model
+customer.address.on('change', function(e) {});
+customer.orders.on('push', function(e) {
+  console.log('Order count: ', e.detail.value);
+});
 
 // models are validatable
-console.log(person.errors);
-// => [] Empty Array as we haven't defined any validators yet
+console.log(customer.errors);
+console.log(customer.address.errors);
+
+// => [] Empty Arrays are returned as we haven't defined any validators yet
 
 ```
-Note: the `new` keyword is optional when calling `var person1 = new Person('foo', 42);`
+### schema definition
 
-#### Simple example
+  A schema is any valid javascript object like `customerSchema` above.
+  The object can also contain special metadata
+  properties that describe the data. These properties are:
+  
+
+ - __type
+   - `String`, `Number`, `Date`, `Boolean`, `Array` or `Object`
+   - Can also be set to another supermodel constructor function
+   - Values will be cast on supported types `String`, `Number`, `Date` and `Boolean`.
+ - __value
+   - The default value of the property. If a function is passed, it will be called and the return value used e.g. `Date.now` can be used to timestamp the model.
+ - __validators (Array)
+   - An array of functions that will be used to validate the model. Validators can be applied at both the "property" level e.g. `line1` and the  "object" level e.g. `address`. 
+   - Use can choose whatever validation library you wish or roll your own.
+   - Validators are called in series when the .errors property is accessed, if a validator returns a truthy value an error is added to the list.
+ - __get
+   - A getter function.
+ - __set
+ - __configurable
+ - __enumerable
+
+
+Building on the above example we can start applying in some validations rules. We'll also introduce how to compose models together.
 ```js
-var simpleSchema = {
-  a: 1,
-  b: 2,
-  get c() {
-    return this.a + this.b;
-  },
-  d: {
-    e: 'something',
-    f: 'else'
+// Create a simple "required" field validator
+function required(value) {
+  if (!value) {
+    return 'Field is required';
   }
+} 
+
+// Split out the Order into it's own constructor
+// so it can be shared with other models
+var Order = supermodel({
+  productCode: String,
+  quantity: Number
+});
+
+var Address = supermodels({
+  line1: String,
+  line2: String,
+  postcode: String,
+  latLong: {
+    lat: Number,
+    long: Number
+  }
+  get fullAddress() {
+    return this.line1 + ' ' + this.line2;
+  }
+});
+  
+var customerSchema = {
+  // add a basic auto generated id field 
+  id: {
+    __type: String,
+    __value: function() { return Math.random }
+  },
+  // add a required field validator to name 
+  name: {
+    __type: String,
+    __validators: [required]
+  },
+  age: Number,
+  address: Address,
+  orders: [Order]
 };
 
-var simple = supermodels(simpleSchema);
+var Customer = supermodels(customerSchema);
+var customer = new Customer();
+customer.orders.push(new Order());
 
-simple.a
-// => 1
-
-// models are observable
-simple.on('change', function(e) {
-  // fires whenever `simple` changes
-  console.log('simple changed');
-});
-
-// models are observable at all levels in the object
-simple.d.on('change', function(e) {
-  // fires whenever `simple.d` changes
-  console.log('simple.d changed');
-});
-
-simple.d.e = 'egg';
-// simple.d changed
-// simple changed
-// => "egg"
+var errors = customer.errors;
+console.log(errors);
 ```
 
-#### Real world example
-  This example introduces type casting and a little more on how events are propaged throuhg the object 
+#### Events
+ Events are propagated up through the object (person) is an similar fashion to how DOM events do.
 
 ```js
-var personSchema = {
-  firstName: String, // Property will  be cast to a String
-  lastName: String,
-  get fullName() {
-    return this.firstName + ' ' + this.lastName;
-  },
-  set fullName(value) {
-    var parts = value.split(' ');
-    this.firstName = parts[0];
-    this.lastName = parts[1];
-  },
-  age: Number, // Property will  be cast to a Number
-  address: {
-    line1: String,
-    line2: String,
-    country: String,
-    latLong: {
-      lat: Number,
-      long: Number
-    }
-  }
-};
-
-var person = supermodels(personSchema);
-
-/**
- * Events
- * Events are propagated up through the object (person)
- * is an similar fashion to how DOM events do.
- */
- 
 // Fires when any change is made to the person
 person.on('change', function(e) {});
 
@@ -119,21 +158,13 @@ person.address.on('change', function(e) {});
 
 // Fires when any change is made to the latLong
 person.address.latLong.on('change', function(e) {});
-
-// Fires when any change is made to just the latitude
-person.address.latLong.on('change:lat', function(e) {});
-
-// Fires when any change is made to just the latitude.
-// This is equivilent to the previous handler although
-// the `this` context and event argument `e` will differ
-person.on('change:address.latLong.lat', function(e) {});
 ```
 
-### Traversing
-The following properties are available on each Object and Array of the model object to help navigate
-  `__name`, `__parent`, `__ancestors`, `__descendants`, `__keys`, `__children`, `__isRoot`, `__hasAncestors`, `__path`, `__hasDescendants`
+#### Traversing
+The following properties are available on each Object and Array of the model object to help navigate:
+  `__name`, `__parent`, `__ancestors`, `__descendants`, `__keys`, `__children`, `__isRoot`, `__hasAncestors`, `__path`, `__hasDescendants`. These are not often required but can be useful to look up ancestor properties.
 
- ```js
+```js
  person.__isRoot;
  // => true
  
@@ -160,16 +191,8 @@ The following properties are available on each Object and Array of the model obj
  
  person.address.latLong.__path
  // => 'address.latLong'
-
 ```
 
-### schema
-
-  A schema is any valid javascript object.
-  The object can also contain special metadata
-  properties that describe the data. These properties are:
-  `__validators`,  `__value`, `__type`, `__get`, `__set`, `__configurable` and `__enumerable'
-  
 
 ```js
 var model = supermodels({
@@ -179,48 +202,8 @@ var model = supermodels({
     __value: 2
   }
 });
-=======
-  A schema is any valid javascript object as shown above.
-  The schema can also contain special metadata
-  properties that describe the data. These properties are:
-  `__validators`,  `__value`, `__type`, `__get`, `__set`, `__configurable` and `__enumerable`
-
-#### Type casting
-  
-  Have your properties cast their value on set using `__type`.
-  Supported types are `String`, `Number`, `Date` and `Boolean`.
-  
-  There are two ways to give a property a type:
-
-  The simple short hand as above:
-```js
-var o = {
-  typedString: String,
-  typedNumber: Number
-}
 ```
-  or using the special  `__type` property
-
-```js
-var o = {
-  typedString: {
-    __type: String
-  },
-  typedNumber: {
-    __type: Number
-  }
-}
-```
-
-#### Validators
-
-  Validate your properties and models using including a `__validators` array.
-  The array should a list of functions. Validators can be applied at both the "property" level e.g. `line1` and the  "object" level e.g. `address` or `person`.
-  
-  
-```js
-var myValidator1 = function(value[, key]) {};
-```
+#### Validation
   Each validator function get passed the current value as the first argument.
   The `this` context is the current "object" level e.g. `address` or `person`.
   If a `key` is present, it will be passed as a second argument.
@@ -286,8 +269,6 @@ person.errors
 person.address.errors
 // => []
 ```
-  
-  In addition to declaring validators a simple function like above, they can also be defined as objects with a  'test' (fn) property. Any other data contained on the object will be passed through and available in the errors.
 
 ##### Real world example
 ```js
@@ -313,90 +294,10 @@ var loginController = {
 ```
 
 
-```js
-function Required(displayName, predicate) {
-  this.displayName = displayName;
-  this.predicate = predicate;
-}
-Required.prototype.name = 'required';
-Required.prototype.test = function(value, key) {
-  if (!value && (this.predicate && this.predicate())) {
-    return this.displayName + ' is required';
-  }
-};
-
-var over18 = function(value, key) {
-  if (value && value < 18) {
-    return (this.firstName || 'Person') + ' ' + key + ' should be over 18';
-  }
-};
-
-var otherTitleRequired = function(value, key) {
-  if (value && value < 18) {
-    return (this.firstName || 'Person') + ' ' + key + ' should be over 18';
-  }
-};
-  
-var personSchema = {
-  title: {
-    id: Number,
-    
-    __type: String,
-    __validators: [new Required('Title')]
-  },
-  firstName: {
-    __type: String,
-    __validators: [new Required('First name')]
-  },
-  lastName: {
-    __type: String,
-    __validators: [new Required('Last name')]
-  },
-  age: {
-    __type: Number,
-    __validators: [required, over18]
-  },
-  __validators: [noBigBadWolves]
-};
-
-var person = supermodels(personSchema);
-
-// Simple example
-var model = supermodels({
-  a: 1, // Property will have an initial value of 1
-  b: Number, // Property will be cast to a `Number` and have an initial value of `undefined`
-  c: {
-    __type: Number, // Property will also be cast to a `Number` and have an initial value of 2
-    __value: 2
-  },
-  o: {
-    d: String,
-    e: 'Initial value'
-  }
-});
-
-JSON.stringify(model, null, 2);
-//"{
-//  "a": 1,
-//  "c": 2,
-//  "o": {
-//    "e": "Initial value"
-//  }
-//}"
-
-model.a = '42'
-// => "42" Property not cast
-model.b = '42'
-// => 42 Property has been cast to a Number
-
-```
-
 ## Testing
 
 ```
-$ npm install
-$ make test &
-$ open http://localhost:3000
+$ npm test
 ```
 
 # License
