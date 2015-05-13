@@ -1,0 +1,36 @@
+<script src="../../dist/supermodels.js"></script>
+<script>
+// Schemas can be as simple as an array
+var modelSchema = [{
+  __type: Number,
+  __validators: [function(value, key) {
+    if (!value || value < 0 || value > 100) {
+      return 'Array item ' + key + ' should be between 0 and 100';
+    }
+  }],
+}];
+// If a primitive passed to supermodels,
+// a wrapper is returned, with the 
+// default value a the primitive value
+var Model = supermodels(modelSchema);
+var percentages = new Model();
+
+percentages.on('push', function(e) {
+  console.log(e);
+});
+percentages.on('splice', function(e) {
+  console.log(e);
+});
+percentages.on('unshift', function(e) {
+  console.log(e);
+});
+percentages.push(80);
+console.log(percentages.length); //=> 1
+console.log(percentages.errors); //=> []
+
+percentages.push(-10);
+console.log(percentages.length); //=> 2
+console.log(percentages.errors); //=> ['Array item 1 should be between 0 and 100']
+
+percentages.splice(1, 0, '42', '76', '87');
+</script>

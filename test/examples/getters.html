@@ -1,0 +1,26 @@
+<script src="../../dist/supermodels.js"></script>
+<script>
+var modelSchema = {
+  line1: String,
+  line2: String,
+  get fullAddress() {
+    return this.line1 + ' ' + this.line2;
+  },
+  anotherFullAddress: {
+    __get: function() {
+      return this.line1 + ' ' + this.line2;
+    }
+  }
+};
+var Model = supermodels(modelSchema);
+var model = new Model();
+
+model.on('change', function(e) {
+  console.log(e);
+})
+model.line1 = 'foo';
+model.line2 = 'bar';
+
+console.log(model.fullAddress);
+console.log(model.anotherFullAddress);
+</script>

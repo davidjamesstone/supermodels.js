@@ -1,0 +1,30 @@
+<script src="../../dist/supermodels.js"></script>
+<script>
+// Schemas can be as simple as this
+var modelSchema = 4;
+// If a primitive passed to supermodels,
+// a wrapper is returned, with the 
+// default value a the primitive value
+var Model = supermodels(modelSchema);
+var model = new Model();
+
+console.log(model.getValue()); //=> 4
+model.setValue('3');
+console.log(model.getValue()); //=> '3' 
+
+// Schemas can be as simple as this
+var modelSchema1 = {
+  __type: Number,
+  __value: 42
+};
+
+// If a primitive passed to supermodels,
+// a wrapper is returned, with the 
+// default value a the primitive value
+var Model1 = supermodels(modelSchema1);
+var model1 = new Model1();
+
+console.log(model.getValue()); //=> 4
+model.setValue('3');
+console.log(model.getValue()); //=> 3 Cast to a number
+</script>

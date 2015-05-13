@@ -30,12 +30,19 @@ test('mvc', function(t) {
       number: required('House number', Number),
       line1: required('Line 1'),
       line2: required('Line 2'),
-      country: required('Country')
+      country: required('Country'),
+      fullAddress: {
+        __get: function() {
+          return this.line1 + ', ' + this.line2;
+        }
+      },
+      get fullAddress1() {
+        return this.line1 + ', ' + this.line2;
+      }
     },
     display: {
       __get: function() {
-        //debugger
-        //return this.firstName + ' of ' + this.address.country;
+        return this.firstName + ' of ' + this.address.country;
       }
     }
   };
@@ -65,9 +72,11 @@ test('mvc', function(t) {
   t.equal(formModel.address.errors.length, 4);
   t.equal(formModel.address.errors[0].error, 'House number is required');
 
-
+  formModel.firstName = 'Elizabeth II';
   formModel.address.number = 42;
-  formModel.address.line2 = 'Buckingham Palace';
+  formModel.address.line1 = 'Buckingham Palace';
+  formModel.address.line2 = 'London';
+  formModel.address.country = 'UK';
 
   console.log(formModel.address.fullAddress);
   console.log(formModel.address.fullAddress1);
