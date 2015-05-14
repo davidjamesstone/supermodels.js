@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link href="prism.css" rel="stylesheet" />
+  <link href="index.css" rel="stylesheet" />
+  <script src="../../dist/supermodels.js"></script>
+  <script src="examples.js"></script>
+  <script class="code">
+  // Typed array colllections
+  // can be created with. Here
+  // we create a Media Gallery example.
+  var Media = supermodels({
+    url: String,
+    thumbnailUrl: String,
+    title: String,
+    description: String,
+    created: Date
+  });;
+  var mediaGallerySchema = {
+    __type: [Media],
+    addMedia: function() {
+      // a little helper function to add media items
+      var media = new Media();
+      this.push(media);
+      return media;
+    },
+    get titles() {
+      // a getter will be applied to all 
+      // mediagallery instances that returns the titles
+      return this.map(function(media) {
+        return media.title
+      });
+    }
+  };
+
+  // Create constructor from the schema
+  var MediaGallery = supermodels(mediaGallerySchema);
+  var mediaGallery = new MediaGallery();
+
+  // Add some listeners
+  mediaGallery.on('change', logEvent);
+  mediaGallery.on('unshift', logEvent);
+
+  // add Media with our custom function
+  var media = mediaGallery.addMedia();
+  media.url = 'http:/example.com';
+  media.title = 'foo bar';
+  media.created = new Date();
+
+  // or by normal means
+  var media1 = new Media();
+  mediaGallery.unshift(media1);
+  media1.url = 'http:/example1.com';
+  media1.title = 'foo bar baz';
+  media1.created = new Date();
+
+  console.log(JSON.stringify(mediaGallery, null, 2));
+  console.log(mediaGallery.titles);
+
+  // An ERROR is raised if we try to put anything 
+  // other than an instance of a Media element 
+  mediaGallery.push({
+    opps: true
+  });
+  </script>
+</head>
+
+<body>
+  <pre class="language-javascript"><code class="language-javascript"></code></pre>
+  <script src="index.js"></script>
+  <script src="prism.js"></script>
+</body>
+
+</html>

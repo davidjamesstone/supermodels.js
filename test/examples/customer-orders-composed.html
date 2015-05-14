@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link href="prism.css" rel="stylesheet" />
+  <link href="index.css" rel="stylesheet" />
+  <script src="../../dist/supermodels.js"></script>
+  <script src="examples.js"></script>
+  <script class="code">
+  // Schemas can be built independently and composed together
+  // Here we define a customer with a name, dob, with
+  // a list of addresses and an order. The order element 
+  // contains a list of order lines and some total functions.
+  // See customer-orders.html for an alternative of this example
+  var Address = supermodels({
+    line1: String,
+    line2: String
+  });
+
+  var OrderLine = supermodels({
+    productId: Number,
+    quantity: Number,
+    isDiscounted: Boolean,
+    price: Number
+  });
+
+  var customerSchema = {
+    name: String,
+    dateOfBirth: Date,
+    addresses: [Address],
+    order: {
+      lines: [OrderLine],
+      get total() {
+        var total = 0;
+        for (var i = 0; i < this.lines.length; i++) {
+          total += this.lines[i].price;
+        };
+        return total;
+      },
+      get totalQuantity() {
+        var totalQuantity = 0;
+        for (var i = 0; i < this.lines.length; i++) {
+          totalQuantity += this.lines[i].quantity;
+        };
+        return totalQuantity;
+      }
+    }
+  };
+
+  // If a primitive passed to supermodels,
+  // a wrapper is returned, with the 
+  // default value a the primitive value
+  var Customer = supermodels(customerSchema);
+  var customer = new Customer();
+
+  customer.on('change', logEvent);
+
+  customer.order.lines.on('push', function(e) {
+    console.log('New order line added');
+  });
+
+  customer.name = 'Jane Doe';
+  customer.dateOfBirth = new Date(1978, 1, 1);
+
+  console.log(customer);
+
+  // To create a new item in the array we 
+  // call our `new Address()` constructor.
+  var address = new Address();
+  address.line1 = 'Buckingham Palace';
+  address.line2 = 'London';
+  customer.addresses.push(address);
+
+  var line = new OrderLine();
+  customer.order.lines.push(line);
+
+  line.on('change', function() {
+    console.log('I can listen to events anywhere');
+  });
+
+  line.productId = 1001;
+  line.quantity = 2;
+  line.price = 59.99;
+
+  // To create a new item in the array we 
+  // call our `new Address()` constructor.
+  var line2 = new OrderLine();
+  customer.order.lines.push(line2);
+
+  line2.productId = 1002;
+  line2.quantity = 1;
+  line2.price = 79.99;
+
+  console.log(customer);
+  console.log(customer.order.total);
+  console.log(JSON.stringify(customer, null, 2));
+  </script>
+</head>
+
+<body>
+  <pre class="language-javascript"><code class="language-javascript"></code></pre>
+  <script src="index.js"></script>
+  <script src="prism.js"></script>
+</body>
+
+</html>

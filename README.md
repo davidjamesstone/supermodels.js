@@ -69,6 +69,9 @@ console.log(customer.address.errors);
 // => [] Empty Arrays are returned as we haven't defined any validators yet
 
 ```
+
+See the [examples](test/examples) folder
+
 ### schema definition
 
   A schema is any valid javascript object like `customerSchema` above.
@@ -92,7 +95,7 @@ console.log(customer.address.errors);
  - __configurable
  - __enumerable
 
-
+#### Validation
 Building on the above example we can start applying in some validations rules. We'll also introduce how to compose models together.
 ```js
 // Create a simple "required" field validator
@@ -146,8 +149,18 @@ var errors = customer.errors;
 console.log(errors);
 ```
 
-#### Events
- Events are propagated up through the object (person) is an similar fashion to how DOM events do.
+#### Observable
+ Events are propagated up through the object (person) is an similar fashion to how DOM events do. `change` events occur for all changes to the model. Other events emitted are: 
+
+ - `set`
+   - Occurs when a value is updated. Event detail will include the new value and the old value. `set` events also occur when array items are updated. See the note on updating array values.
+ - `push`
+ - `pop`
+ - `unshift`
+ - `shift`
+ - `sort`
+ - `reverse`
+ - `splice`
 
 ```js
 // Fires when any change is made to the person
@@ -160,7 +173,7 @@ person.address.on('change', function(e) {});
 person.address.latLong.on('change', function(e) {});
 ```
 
-#### Traversing
+#### Traversable
 The following properties are available on each Object and Array of the model object to help navigate:
   `__name`, `__parent`, `__ancestors`, `__descendants`, `__keys`, `__children`, `__isRoot`, `__hasAncestors`, `__path`, `__hasDescendants`. These are not often required but can be useful to look up ancestor properties.
 

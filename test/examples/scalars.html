@@ -1,30 +1,44 @@
-<script src="../../dist/supermodels.js"></script>
-<script>
-// Schemas can be as simple as this
-var modelSchema = 4;
-// If a primitive passed to supermodels,
-// a wrapper is returned, with the 
-// default value a the primitive value
-var Model = supermodels(modelSchema);
-var model = new Model();
+<!DOCTYPE html>
+<html>
 
-console.log(model.getValue()); //=> 4
-model.setValue('3');
-console.log(model.getValue()); //=> '3' 
+<head>
+  <link href="prism.css" rel="stylesheet" />
+  <link href="index.css" rel="stylesheet" />
+  <script src="../../dist/supermodels.js"></script>
+  <script src="examples.js"></script>
+  <script class="code">
+  // Schemas can be as simple as this
+  var modelSchema = 4;
+  // If a primitive passed to supermodels,
+  // a wrapper is returned, with the 
+  // default value a the primitive value
+  var Model = supermodels(modelSchema);
+  var model = new Model();
 
-// Schemas can be as simple as this
-var modelSchema1 = {
-  __type: Number,
-  __value: 42
-};
+  console.log(model.getValue()); //=> 4
+  model.setValue('3');
+  console.log(model.getValue()); //=> '3' 
 
-// If a primitive passed to supermodels,
-// a wrapper is returned, with the 
-// default value a the primitive value
-var Model1 = supermodels(modelSchema1);
-var model1 = new Model1();
+  // Here;s a schema that describes a
+  // Number with an initial value of 42
+  var modelSchema1 = {
+    __type: Number,
+    __value: 42
+  };
 
-console.log(model.getValue()); //=> 4
-model.setValue('3');
-console.log(model.getValue()); //=> 3 Cast to a number
-</script>
+  var Model1 = supermodels(modelSchema1);
+  var model1 = new Model1();
+
+  console.log(model.getValue()); //=> 4
+  model.setValue('3');
+  console.log(model.getValue()); //=> 3 Cast to a number
+  </script>
+</head>
+
+<body>
+  <pre class="language-javascript"><code class="language-javascript"></code></pre>
+  <script src="index.js"></script>
+  <script src="prism.js"></script>
+</body>
+
+</html>

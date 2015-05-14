@@ -1,26 +1,40 @@
-<script src="../../dist/supermodels.js"></script>
-<script>
-var modelSchema = {
-  line1: String,
-  line2: String,
-  get fullAddress() {
-    return this.line1 + ' ' + this.line2;
-  },
-  anotherFullAddress: {
-    __get: function() {
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link href="prism.css" rel="stylesheet" />
+  <link href="index.css" rel="stylesheet" />
+  <script src="../../dist/supermodels.js"></script>
+  <script src="examples.js"></script>
+  <script class="code">
+  var modelSchema = {
+    line1: String,
+    line2: String,
+    get fullAddress() {
       return this.line1 + ' ' + this.line2;
+    },
+    anotherFullAddress: {
+      __get: function() {
+        return this.line1 + ' ' + this.line2;
+      }
     }
-  }
-};
-var Model = supermodels(modelSchema);
-var model = new Model();
+  };
+  var Model = supermodels(modelSchema);
+  var model = new Model();
 
-model.on('change', function(e) {
-  console.log(e);
-})
-model.line1 = 'foo';
-model.line2 = 'bar';
+  model.on('change', logEvent)
+  model.line1 = 'foo';
+  model.line2 = 'bar';
 
-console.log(model.fullAddress);
-console.log(model.anotherFullAddress);
-</script>
+  console.log(model.fullAddress);
+  console.log(model.anotherFullAddress);
+  </script>
+</head>
+
+<body>
+  <pre class="language-javascript"><code class="language-javascript"></code></pre>
+  <script src="index.js"></script>
+  <script src="prism.js"></script>
+</body>
+
+</html>
