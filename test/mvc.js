@@ -4,7 +4,7 @@ var supermodels = require('../');
 
 test('mvc', function(t) {
 
-  t.plan(4);
+  t.plan(7);
 
   // helpers
   //
@@ -62,7 +62,6 @@ test('mvc', function(t) {
   var formModel = formCtrl.model;
 
 
-
   console.log(formModel.errors.map(function(item) {
     return item.target.__path + '.' + item.key + ': ' + item.error;
   }));
@@ -81,6 +80,11 @@ test('mvc', function(t) {
   console.log(formModel.address.fullAddress);
   console.log(formModel.address.fullAddress1);
   console.log(JSON.stringify(formModel));
+
+
+  t.equal(formModel.address.fullAddress, 'Buckingham Palace, London');
+  t.equal(formModel.address.fullAddress1, 'Buckingham Palace, London');
+  t.equal(formModel.display, 'Elizabeth II of UK');
 
 
 });

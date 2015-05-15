@@ -107,7 +107,7 @@ function required(value) {
 
 // Split out the Order into it's own constructor
 // so it can be shared with other models
-var Order = supermodel({
+var Order = supermodels({
   productCode: String,
   quantity: Number
 });
@@ -119,7 +119,7 @@ var Address = supermodels({
   latLong: {
     lat: Number,
     long: Number
-  }
+  },
   get fullAddress() {
     return this.line1 + ' ' + this.line2;
   }
@@ -129,7 +129,7 @@ var customerSchema = {
   // add a basic auto generated id field 
   id: {
     __type: String,
-    __value: function() { return Math.random }
+    __value: Math.random
   },
   // add a required field validator to name 
   name: {
@@ -206,15 +206,6 @@ The following properties are available on each Object and Array of the model obj
  // => 'address.latLong'
 ```
 
-
-```js
-var model = supermodels({
-  a: Number,
-  b: {
-    __type: Number,
-    __value: 2
-  }
-});
 ```
 #### Validation
   Each validator function get passed the current value as the first argument.
@@ -264,13 +255,15 @@ var personSchema = {
   }
 }
 
-var person = supermodels(personSchema);
+var Person = supermodels(personSchema);
+
+var person = new Person();
 
 person.errors
-// => [ 3 x ValidationErrors: name, line1, line 2 are required ]
+// => [ 3 x ValidationErrors: name, address.line1, address.line2 are required ]
 
 person.address.errors
-// => [ 3 x ValidationErrors: line1, line 2 are required]
+// => [ 2 x ValidationErrors: line1, line 2 are required]
 
 person.name = 'Jane Doe';
 person.address.line1 = 'Buckingham Palace';

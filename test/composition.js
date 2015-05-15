@@ -50,6 +50,7 @@ test('composition references', function(t) {
   var customer = new Customer();
 
   t.equals(typeof customer.basket, 'undefined');
+
   customer.basket = new Basket();
 
   t.equals(customer.basket.__parent, customer);

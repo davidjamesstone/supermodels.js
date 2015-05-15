@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link href="prism.css" rel="stylesheet" />
+  <link href="index.css" rel="stylesheet" />
+  <script src="../../dist/supermodels.js"></script>
+  <script src="examples.js"></script>
+  <script class="code">
+  // Helpers can be used to keep DRY
+  // and they also clean the code up
+  // of too many double undercores.
+
+
+  // helpers
+  //
+  function required(name, type, otherValidators) {
+    return {
+      __type: type || String,
+      __validators: [function(value) {
+        if (!value) {
+          return name + ' is required';
+        }
+      }].concat(otherValidators || [])
+    }
+  }
+
+  /*
+   * Model
+   */
+  var formModelSchema = {
+    firstName: required('First name'),
+    lastName: required('Last name'),
+    dateOfBirth: required('Date of Birth', Date),
+    address: {
+      number: required('House number', Number),
+      line1: required('Line 1'),
+      line2: required('Line 2'),
+      country: required('Country'),
+      get fullAddress() {
+        return this.line1 + ', ' + this.line2;
+      }
+    },
+    get display() {
+      return this.firstName + ' of ' + this.address.country;
+    }
+  };
+  var FormModel = supermodels(formModelSchema);
+  var formModel = new FormModel();
+
+  console.log(formModel.errors);
+  formModel.firstName = 'Elizabeth II';
+  formModel.address.number = 42;
+  formModel.address.line1 = 'Buckingham Palace';
+  formModel.address.line2 = 'London';
+  formModel.address.country = 'UK';
+
+
+  console.log(formModel);
+  console.log(JSON.stringify(formModel, null, 2));
+  </script>
+</head>
+
+<body>
+  <pre class="language-javascript"><code class="language-javascript"></code></pre>
+  <script src="index.js"></script>
+  <script src="prism.js"></script>
+</body>
+
+</html>
