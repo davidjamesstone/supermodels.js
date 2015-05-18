@@ -1,0 +1,17 @@
+{
+  "name": "aa",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm run build:js && npm run build:js-min && npm run build:css",
+    "build:css": "lessc ./styles/main.less > ./dist/main.css",
+    "build:js": "browserify ./index.js -o ./dist/build.js -d",
+    "build:js-min": "browserify ./index.js | uglifyjs --compress --screw-ie8 --mangle > ./dist/build.min.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "moment": "^2.9.0"
+  }
+}

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link href="prism.css" rel="stylesheet" />
+  <link href="index.css" rel="stylesheet" />
+  <script src="../../dist/supermodels.js"></script>
+  <script src="examples.js"></script>
+  <script class="code">
+  var BasketItem = supermodels({
+    productCode: String,
+    quantity: {
+      __type: Number,
+      __validators: [function(value) {
+        if (!value) {
+          return 'Quantity is required';
+        }
+      }]
+    }
+  }, function(productCode, quantity) {
+    this.productCode = productCode;
+    this.quantity = quantity;
+  });
+
+  var Basket = supermodels({
+    items: {
+      __type: [BasketItem],
+      __validators: [function() {
+        if (!this.length) {
+          return 'A least one basket item is required';
+        }
+      }]
+    },
+    total: function() {
+      return this.items.length;
+    },
+    totalItems: function() {
+      var total = 0;
+      for (var i = 0; i < this.items.length; i++) {
+        total += this.items[i].quantity;
+      }
+      return total;
+    },
+    __validators: [function(value) {
+      if (this.totalItems() > 5) {
+        return 'Maximum total quantity of all items is 5';
+      }
+    }]
+  });
+
+  var Customer = supermodels({
+    name: String,
+    basket: {
+      __type: Basket,
+      __validators: [function(value, key) {
+        if (!value) {
+          console.log(key);
+          return 'Basket is required';
+        }
+      }]
+    }
+  });
+
+  var customer = new Customer();
+
+
+
+  console.log(customer.errors);
+
+  customer.basket = new Basket();
+
+  console.log(customer.errors);
+
+  customer.basket.items.push(new BasketItem());
+  console.log(customer.errors);
+  customer.basket.items[0].productCode = 'P1';
+  customer.basket.items[0].quantity = 3;
+  console.log(customer.errors);
+  customer.basket.items.push(new BasketItem('P2', 3));
+  console.log(customer.errors);
+  </script>
+</head>
+
+<body>
+  <pre class="language-javascript"><code class="language-javascript"></code></pre>
+  <script src="index.js"></script>
+  <script src="prism.js"></script>
+</body>
+
+</html>

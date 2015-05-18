@@ -2,11 +2,13 @@
   "name": "supermodels.js",
   "version": "0.0.5",
   "description": "Turn plain old javascript objects into observable, traversable, validatable and composable supermodels.",
+  "keywords": ["Object modelling", "validation", "observer", "Object.observe", "composable", "schema", "mvc", "pubsub"],
   "main": "index.js",
   "scripts": {
     "test1": "browserify -t coverify ./tape --bare | node | coverify",
     "test": "tape ./test/*.js",
     "build": "npm run jshint && npm run build:js && npm run build:js-min",
+    "build:examples": "browserify ./test/examples/affordability-assessment/index.js > ./test/examples/affordability-assessment/dist/build.js  -d",
     "build:js": "browserify index.js --standalone supermodels > ./dist/supermodels.js  -d",
     "build:js-min": "browserify index.js --standalone supermodels | uglifyjs --screw-ie8 --mangle > ./dist/supermodels.min.js",
     "jshint": "jshint ./lib/*.js ./test/*.js",

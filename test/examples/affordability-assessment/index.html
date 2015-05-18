@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Affordability Assessment</title>
+  <link href="./dist/main.css" rel="stylesheet">
+  <script src="./moment.js"></script>
+  <script src="../../../dist/supermodels.js"></script>
+  <script src="./dist/superviews.js"></script>
+  <style>
+  html,
+  body {
+    height: 100%;
+    background-color: #000;
+  }
+  
+  .container {
+    min-height: 100%;
+    background-color: aliceblue;
+  }
+  
+  ol > li.active {
+    font-weight: bold;
+  }
+  
+  .nav-tabs {
+    margin-bottom: 15px;
+  }
+  
+  .summary .popover-content {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  
+  ul.errors {
+    font-size: 0.9em;
+    background-color: moccasin;
+    list-style-type: none;
+    padding: 10px;
+    margin: 0;
+    display: none;
+  }
+  
+  .errors li {}
+  
+  [ui-with="unsecuredCreditView"] tfoot tr,
+  [ui-with="unsecuredCreditView"] tfoot td {
+    border: none!important;
+  }
+  
+  [ui-with="unsecuredCreditView"] tfoot td.text-right {
+    font-weight: bold;
+  }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <form>
+      <h1>Affordability Assessment</h1>
+      <p class="lead">This is an demonstration of how supermodels can be used to drive a UI in an an MVP fashion.
+        <br>I use a DOM binding library here called superviews.js but feel free to use a view library of your choice.</p>
+      <p>The demo is an example of the kind of form you need to fill out to obtain a mortgage or loan.
+        <br>Fill out the applicants details, the outgoings like household expenses.
+        <br>Finally any credit commitments need to be filled out.
+        <br>The MAMR (Maximum Monthly Affordable Repayment) is simply the difference between all income less outgoings.</p>
+      <div class="row">
+        <div class="col-md-8">
+          <ul class="nav nav-tabs">
+            <li ui-for="tabs" ui-attrs="{ 'class': activeTab === this ? 'active' : null }">
+              <a href="#" ui-text="name" ui-click="setActiveTab(ctx)"></a>
+            </li>
+          </ul>
+          <fieldset ui-with="applicantsView" ui-if="activeTab === tabs[0]">
+            <!--<legend>Applicants</legend>-->
+            <button ui-attrs="{ disabled: applicants.canAddApplicant ? null : true }" ui-click="addApplicant(e)" class="btn btn-success pull-right">Add Applicant</button>
+            <ol>
+              <li ui-for="applicants.items" ui-attrs="{ 'class': this === editApplicant ? 'active' : '' }" ui-click="setEditApplicant(ctx)">
+                <a ui-text="displayName" href='#'></a>
+              </li>
+            </ol>
+            <div ui-if="editApplicant">
+              <div ui-with="editApplicant">
+                <ul ui-if1="editApplicant.errors.length" class="text-danger errors">
+                  <li ui-for1="editApplicant.errors" ui-text1="error"></li>
+                </ul>
+                <fieldset>
+                  <legend>Personal Details</legend>
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <div class="form-group float-label-group">
+                        <label>First name</label>
+                        <input type="text" ui-bind="firstName" class="form-control">
+                      </div>
+                    </div>
+                    <div class="col-sm-3">
+                      <div class="form-group float-label-group">
+                        <label>Last name</label>
+                        <input type="text" ui-bind="lastName" class="form-control">
+                      </div>
+                    </div>
+                    <div class="col-sm-3">
+                      <div class="form-group float-label-group">
+                        <label>Date of Birth</label>
+                        <input type="date" ui-bind="dobUi" class="form-control">
+                      </div>
+                    </div>
+                    <div class="col-sm-3">
+                      <div class="form-group float-label-group">
+                        <label>Retirement age</label>
+                        <input type="number" ui-bind="retirementAge" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                </fieldset>
+                <fieldset ui-with="monthlyIncome">
+                  <legend>Monthly Income</legend>
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <div class="form-group float-label-group">
+                        <label>Occupation</label>
+                        <input type="text" ui-bind="occupation" class="form-control">
+                      </div>
+                    </div>
+                    <div class="col-sm-3">
+                      <div class="form-group float-label-group" title="Nature of Business if self-employed">
+                        <label>Nature of Business</label>
+                        <input type="text" ui-bind="natureOfBusiness" class="form-control">
+                      </div>
+                    </div>
+                    <div class="col-sm-3">
+                      <div class="form-group float-label-group add-on">
+                        <label class="control-label">Net Monthly Income</label>
+                        <div class="input-group">
+                          <span class="input-group-addon">£</span>
+                          <input ui-bind="employedNetMonthlyIncome" type="number" class="form-control">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-3">
+                      <div class="form-group float-label-group add-on" title="Self-employed Net Monthly Income">
+                        <label class="control-label">Self-employed Income</label>
+                        <div class="input-group">
+                          <span class="input-group-addon">£</span>
+                          <input ui-bind="selfEmployedNetMonthlyIncome" type="number" class="form-control">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-sm-4">
+                      <div class="form-group float-label-group add-on">
+                        <label>Net Rental Income</label>
+                        <div class="input-group">
+                          <span class="input-group-addon">£</span>
+                          <input ui-bind="netRentalIncome" type="number" class="form-control">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-4">
+                      <div class="form-group float-label-group add-on">
+                        <label>State Pension</label>
+                        <div class="input-group">
+                          <span class="input-group-addon">£</span>
+                          <input ui-bind="statePension" type="number" class="form-control">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-4">
+                      <div class="form-group float-label-group add-on">
+                        <label class="control-label">Private Pension(s)</label>
+                        <div class="input-group">
+                          <span class="input-group-addon">£</span>
+                          <input ui-bind="privatePension" type="number" class="form-control">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <div class="form-group float-label-group add-on">
+                        <label>DWP</label>
+                        <div class="input-group">
+                          <span class="input-group-addon">£</span>
+                          <input ui-bind="deptWorkPension" type="number" class="form-control">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-3">
+                      <div class="form-group float-label-group add-on" title="Working Family Tax Credits">
+                        <label>Family Tax Credits</label>
+                        <div class="input-group">
+                          <span class="input-group-addon">£</span>
+                          <input ui-bind="workingFamilyTaxCredits" type="number" class="form-control">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-3">
+                      <div class="form-group float-label-group add-on">
+                        <label class="control-label">Tax Credit</label>
+                        <div class="input-group">
+                          <span class="input-group-addon">£</span>
+                          <input ui-bind="taxCredit" type="number" class="form-control">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-3">
+                      <div class="form-group float-label-group add-on">
+                        <label class="control-label">Child Benefit</label>
+                        <div class="input-group">
+                          <span class="input-group-addon">£</span>
+                          <input ui-bind="childBenefit" type="number" class="form-control">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-sm-4">
+                      <div class="form-group float-label-group add-on">
+                        <label>Other income</label>
+                        <div class="input-group">
+                          <span class="input-group-addon">£</span>
+                          <input ui-bind="otherIncome.amount" type="number" class="form-control">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-8">
+                      <div class="form-group float-label-group" title="Please provide a description of any other income">
+                        <label>Describe any other income</label>
+                        <input ui-bind="otherIncome.description" type="text" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                  <hr>
+                  <button ui-click="removeApplicant(e)" ui-attrs="{ disabled: applicants.items.length > 1 ? null : true }" class="btn btn-warning pull-right">Remove Applicant</button>
+                  <h4>Total Net Monthly Income for Applicant £&nbsp;<strong ui-text="totalNetMonthlyIncome"></strong></h4>
+                </fieldset>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset ui-with="fullAssessment.household" ui-if="activeTab === tabs[1]">
+            <legend>Household expenditure</legend>
+            <ul ui-if1="errors.length" class="text-danger errors">
+              <li ui-for1="errors" ui-text1="error"></li>
+            </ul>
+            <div class="row">
+              <div class="col-sm-4">
+                <div class="form-group float-label-group" title="No of dependants aged 19 or over who are not applicants">
+                  <label>Dependants 19 or over</label>
+                  <input type="number" ui-bind="numberOfDependants19OrOver" class="form-control">
+                </div>
+              </div>
+              <div class="col-sm-4">
+                <div class="form-group float-label-group" title="No of dependants aged 18 or under">
+                  <label>Dependants 18 or under</label>
+                  <input type="number" ui-bind="numberOfDependants18OrUnder" class="form-control">
+                </div>
+              </div>
+            </div>
+            <div ui-with="monthlyExpenditure">
+              <fieldset ui-with="essentials">
+                <legend>Essentials</legend>
+                <div class="row">
+                  <div class="col-sm-3">
+                    <div class="form-group float-label-group add-on" ui-attrs="{ title: rentOrServiceChange.name }">
+                      <label class="control-label">Rent</label>
+                      <div class="input-group">
+                        <span class="input-group-addon">£</span>
+                        <input ui-bind="rentOrServiceChange.value" type="number" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-3">
+                    <div class="form-group float-label-group add-on" ui-attrs="{ title: pensionLifeInsuranceMortgage.name }">
+                      <label class="control-label">Pensions/Life ins.</label>
+                      <div class="input-group">
+                        <span class="input-group-addon">£</span>
+                        <input ui-bind="pensionLifeInsuranceMortgage.value" type="number" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-3">
+                    <div class="form-group float-label-group add-on" ui-attrs="{ title: buildingsAndContentsInsurance.name }">
+                      <label class="control-label">Buildings and Contents</label>
+                      <div class="input-group">
+                        <span class="input-group-addon">£</span>
+                        <input ui-bind="buildingsAndContentsInsurance.value" type="number" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-sm-3">
+                    <div class="form-group float-label-group add-on" ui-attrs="{ title: councilTax.name }">
+                      <label class="control-label">Council tax</label>
+                      <div class="input-group">
+                        <span class="input-group-addon">£</span>
+                        <input ui-bind="councilTax.value" type="number" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-3">
+                    <div class="form-group float-label-group add-on" ui-attrs="{ title: gasElectricHeating.name }">
+                      <label class="control-label">Gas/Elec.</label>
+                      <div class="input-group">
+                        <span class="input-group-addon">£</span>
+                        <input ui-bind="gasElectricHeating.value" type="number" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-3">
+                    <div class="form-group float-label-group add-on" ui-attrs="{ title: water.name }">
+                      <label class="control-label">Water</label>
+                      <div class="input-group">
+                        <span class="input-group-addon">£</span>
+                        <input ui-bind="water.value" type="number" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-sm-3">
+                    <div class="form-group float-label-group add-on" ui-attrs="{ title: shopping.name }">
+                      <label class="control-label">Shopping</label>
+                      <div class="input-group">
+                        <span class="input-group-addon">£</span>
+                        <input ui-bind="shopping.value" type="number" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-3">
+                    <div class="form-group float-label-group add-on" ui-attrs="{ title: medicalCare.name }">
+                      <label class="control-label">Medical care</label>
+                      <div class="input-group">
+                        <span class="input-group-addon">£</span>
+                        <input ui-bind="medicalCare.value" type="number" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-3"></div>
+                  <div class="col-sm-3">
+                    <h4>Essential Expenses £&nbsp;<strong ui-text="total"></strong></h4>
+                  </div>
+                </div>
+              </fieldset>
+              <fieldset ui-with="livingExpenses">
+                <legend>Living Expenses</legend>
+                <div class="row">
+                  <div class="col-sm-3">
+                    <div class="form-group float-label-group add-on" ui-attrs="{ title: tvInternetPhone.name }">
+                      <label class="control-label">TV/Internet/Phone</label>
+                      <div class="input-group">
+                        <span class="input-group-addon">£</span>
+                        <input ui-bind="tvInternetPhone.value" type="number" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-3">
+                    <div class="form-group float-label-group add-on" ui-attrs="{ title: entertainment.name }">
+                      <label class="control-label">Entertainment</label>
+                      <div class="input-group">
+                        <span class="input-group-addon">£</span>
+                        <input ui-bind="entertainment.value" type="number" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-3">
+                    <div class="form-group float-label-group add-on" ui-attrs="{ title: clothing.name }">
+                      <label class="control-label">Clothing</label>
+                      <div class="input-group">
+                        <span class="input-group-addon">£</span>
+                        <input ui-bind="clothing.value" type="number" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-sm-3">
+                    <div class="form-group float-label-group add-on" ui-attrs="{ title: childRelatedExpenses.name }">
+                      <label class="control-label">Child expenses</label>
+                      <div class="input-group">
+                        <span class="input-group-addon">£</span>
+                        <input ui-bind="childRelatedExpenses.value" type="number" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-3">
+                    <div class="form-group float-label-group add-on" ui-attrs="{ title: otherExpenses.name }">
+                      <label class="control-label">Other</label>
+                      <div class="input-group">
+                        <span class="input-group-addon">£</span>
+                        <input ui-bind="otherExpenses.value" type="number" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-3"></div>
+                  <div class="col-sm-3">
+                    <h4>Living Expenses £&nbsp;<strong ui-text="total"></strong></h4>
+                  </div>
+                </div>
+              </fieldset>
+              <fieldset ui-with="travelExpenses">
+                <legend>Travel Expenses</legend>
+                <div class="row">
+                  <div class="col-sm-3">
+                    <div class="form-group float-label-group" title="How many cars do you have?">
+                      <label>How many cars do you have?</label>
+                      <input type="number" ui-bind="numberOfCars" class="form-control">
+                    </div>
+                  </div>
+                  <div class="col-sm-3">
+                    <div class="form-group float-label-group add-on" ui-attrs="{ title: carExpenses.name }">
+                      <label class="control-label">Car expenses</label>
+                      <div class="input-group">
+                        <span class="input-group-addon">£</span>
+                        <input ui-bind="carExpenses.value" type="number" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-3">
+                    <div class="form-group float-label-group add-on" ui-attrs="{ title: otherTravelExpenses.name }">
+                      <label class="control-label">Other travel</label>
+                      <div class="input-group">
+                        <span class="input-group-addon">£</span>
+                        <input ui-bind="otherTravelExpenses.value" type="number" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-3">
+                    <h4>Travel Expenses £&nbsp;<strong ui-text="total"></strong></h4>
+                  </div>
+                </div>
+              </fieldset>
+              <hr>
+              <h4>Total Household Expenditure £&nbsp;<strong ui-text="total"></strong></h4>
+            </div>
+          </fieldset>
+          <fieldset ui-with="unsecuredCreditView" ui-if="activeTab === tabs[2]">
+            <legend>Credit / Unsatisfied CCJs / Defaults / Bankruptcies and IVAs</legend>
+            <ul ui-if1="unsecuredCredit.errors.length" class="text-danger errors">
+              <li ui-for1="unsecuredCredit.errors" ui-text1="error"></li>
+            </ul>
+            <div class="table-responsive">
+              <table class="table table-condensed table-striped">
+                <thead>
+                  <tr>
+                    <th width="20%">Company Name / Creditor</th>
+                    <th width="20%">Applicant</th>
+                    <th width="15%">Type</th>
+                    <th>Balance (Approximate)</th>
+                    <th>Monthly payments</th>
+                    <th>To be Repaid</th>
+                    <th>
+                      <button type="button" ui-click="addUnsecuredCredit();" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span>
+                      </button>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ui-for="unsecuredCredit.items">
+                    <td>
+                      <input type="text" ui-bind="creditor" class="form-control">
+                    </td>
+                    <td>
+                      <select ui-bind="applicantId" class="form-control">
+                        <option value=""></option>
+                        <option ui-for="fullAssessment.applicants.items" ui-text="fullName" ui-attrs="{ value: id }"></option>
+                      </select>
+                    </td>
+                    <td>
+                      <select ui-bind="creditType" class="form-control">
+                        <option value=""></option>
+                        <option ui-for="unsecuredCreditItemTypes" ui-text="name" ui-attrs="{ value: unsecuredCreditItemTypes.indexOf(this) }"></option>
+                      </select>
+                    </td>
+                    <td>
+                      <div class="input-group">
+                        <span class="input-group-addon">£</span>
+                        <input type="number" ui-bind="balance" class="form-control">
+                      </div>
+                    </td>
+                    <td>
+                      <div class="input-group">
+                        <span class="input-group-addon">£</span>
+                        <input type="number" ui-bind="monthlyRepayment" class="form-control">
+                      </div>
+                    </td>
+                    <td>
+                      <input type="checkbox" ui-bind="toBeRepayed">
+                    </td>
+                    <td>
+                      <button type="button" ui-click="removeUnsecuredCredit(ctx)" class="btn btn-default"><span class="glyphicon glyphicon-trash"></span>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot ui-with="unsecuredCredit">
+                  <tr>
+                    <td colspan="3" class="text-right">Total CCJs and Defaults</td>
+                    <td>£&nbsp;<span ui-text="totalCCJAndDefaultsBalance"></span>
+                    </td>
+                    <td>£&nbsp;<span ui-text="totalCCJAndDefaultsMonthlyRepayments"></span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="3" class="text-right">Total IVAs and Bankruptcies</td>
+                    <td>£&nbsp;<span ui-text="totalIVAAndBankruptciesBalance"></span>
+                    </td>
+                    <td>£&nbsp;<span ui-text="totalIVAAndBankruptciesMonthlyRepayments"></span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="3" class="text-right">Total Credit (credit cards / store cards / HP / etc)</td>
+                    <td>£&nbsp;<span ui-text="totalCreditBalance"></span>
+                    </td>
+                    <td>£&nbsp;<span ui-text="totalCreditMonthlyRepayments"></span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="3" class="text-right">Total to be Repaid</td>
+                    <td>£&nbsp;<span ui-text="totalToBeRepayedBalance"></span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="3" class="text-right">Total Remaining</td>
+                    <td>£&nbsp;<span ui-text="totalRemainingBalance"></span>
+                    </td>
+                    <td>£&nbsp;<span ui-text="totalRemainingMonthlyRepayments"></span>
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </fieldset>
+        </div>
+        <div class="col-md-4">
+          <div class="panel panel-info summary">
+            <div class="panel-heading">
+              <div class="pull-right text-info">
+                <span ui-if="!fullAssessment.errors.length" ui-click="toggleErrors()" class="label label-success pull-right"><i class="glyphicon glyphicon glyphicon-ok-sign"></i></span>
+                <span ui-if="fullAssessment.errors.length" ui-click="toggleErrors()" class="label label-warning pull-right"><i class="glyphicon glyphicon glyphicon-exclamation-sign"></i></span>
+              </div>
+              <h3 class="panel-title">Summary</h3>
+              <div class="popover errors bottom">
+                <div class="arrow"></div>
+                <h3 class="popover-title">Todo List <span class="badge pull-right" ui-text="fullAssessment.errors.length"></span></h3>
+                <div class="popover-content">
+                  <div ui-for="fullAssessment.applicants.items">
+                    <h5><span ui-text="fullName || 'Applicant'"></span> <span ui-if="!errors.length" class="label label-success pull-right"><i class="glyphicon glyphicon glyphicon-ok-sign"></i></span></h5>
+                    <ul>
+                      <li ui-for="errors" ui-text="error"></li>
+                    </ul>
+                  </div>
+                  <h5>Household <span ui-if="!fullAssessment.household.errors.length" class="label label-success pull-right"><i class="glyphicon glyphicon glyphicon-ok-sign"></i></span></h5>
+                  <ul>
+                    <li ui-for="fullAssessment.household.errors" ui-text="error"></li>
+                  </ul>
+                  <h5>Credit Commitments <span ui-if="!fullAssessment.unsecuredCredit.errors.length" class="label label-success pull-right"><i class="glyphicon glyphicon glyphicon-ok-sign"></i></span></h5>
+                  <ul>
+                    <li ui-for="fullAssessment.unsecuredCredit.errors" ui-text="error"></li>
+                  </ul>
+                  <h5>Loan Details <span ui-if="!fullAssessment.loanDetails.errors.length" class="label label-success pull-right"><i class="glyphicon glyphicon glyphicon-ok-sign"></i></span></h5>
+                  <ul>
+                    <li ui-for="fullAssessment.loanDetails.errors" ui-text="error"></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="form-group float-label-group" title="Your unique broker reference">
+                <label>Broker ref</label>
+                <input type="text" ui-bind="fullAssessment.brokerRef" class="form-control">
+              </div>
+              <fieldset>
+                <legend>Loan Details</legend>
+                <div class="row">
+                  <div class="col-sm-6">
+                    <div class="form-group float-label-group add-on">
+                      <label class="control-label">Amount</label>
+                      <div class="input-group">
+                        <span class="input-group-addon">£</span>
+                        <input ui-bind="fullAssessment.loanDetails.amount" type="number" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="form-group float-label-group add-on">
+                      <label class="control-label">Term</label>
+                      <div class="input-group">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                        <input ui-bind="fullAssessment.loanDetails.term" type="number" class="form-control">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </fieldset>
+              <dl class="dl-horizontal">
+                <dt>No. Applicants</dt>
+                <dd ui-text="fullAssessment.applicants.items.length">
+                </dd>
+                <dt>Total Net Monthly Income</dt>
+                <dd>£&nbsp;<span ui-text="fullAssessment.applicants.totalNetMonthlyIncome"></span>
+                </dd>
+                <dt>Total Monthly Expenditure</dt>
+                <dd>£&nbsp;<span ui-text="fullAssessment.household.monthlyExpenditure.total"></span>
+                </dd>
+              </dl>
+            </div>
+            <div class="panel-footer">MAMR</div>
+          </div>
+        </div>
+      </div>
+    </form>
+    <pre id="json">
+    </pre>
+  </div>
+  <script src="./dist/build.js"></script>
+</body>
+
+</html>
