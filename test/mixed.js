@@ -1,20 +1,8 @@
-/**
- * Simple Validators Example
- * Validators are defined as objects with a 'test' (fn) property
- * The function is invoked in the context of the model being validated.
- * The 'test' function is called with the following:
- * value - the value of the key or model to be validated
- * key - the key name. This will be undefined for model level validators
- *
- * Any other data will be passed through and
- * available in any subsequent validation errors.
- */
-
 var test = require('tape');
 var supermodels = require('../');
 
 test('mixed', function(t) {
-  t.plan(15);
+  t.plan(17);
 
   var mixedSchema = {
     val: '2',
@@ -109,6 +97,10 @@ test('mixed', function(t) {
   t.equal(mixed.address.latLong.lat, 11.22);
   t.equal(isNaN(mixed.address.latLong.long), true);
 
+
+  mixed.fullName = 'Jo Bloggs';
+  t.equal(mixed.firstName, 'Jo');
+  t.equal(mixed.lastName, 'Bloggs');
 
   var item = mixed.items.create();
   mixed.items.push(item);

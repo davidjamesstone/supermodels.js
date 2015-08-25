@@ -1,23 +1,10 @@
 var test = require('tape');
 var supermodels = require('../');
-
+var required = require('./validators/helpers').required;
 
 test('mvc', function(t) {
 
   t.plan(7);
-
-  // helpers
-  //
-  function required(name, type, otherValidators) {
-    return {
-      __type: type || String,
-      __validators: [function(value) {
-        if (!value) {
-          return name + ' is required';
-        }
-      }].concat(otherValidators || [])
-    }
-  }
 
   /*
    * Model
@@ -67,9 +54,9 @@ test('mvc', function(t) {
   }));
 
   t.equal(formModel.errors.length, 7);
-  t.equal(formModel.errors[0].error, 'First name is required');
+  t.equal(formModel.errors[0].error.message, 'First name is required');
   t.equal(formModel.address.errors.length, 4);
-  t.equal(formModel.address.errors[0].error, 'House number is required');
+  t.equal(formModel.address.errors[0].error.message, 'House number is required');
 
   formModel.firstName = 'Elizabeth II';
   formModel.address.number = 42;
