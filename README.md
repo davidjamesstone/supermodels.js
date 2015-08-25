@@ -9,7 +9,7 @@ supermodels can be used for all sorts of purposes including:
  1. Acting as the `M` and `C|P` in an MV* paradigm
  2. Defining your Business Objects (Customer, Address, Order etc.), their relationships and any validation rules.
  3. Building blocks like Services, Factories, Singletons.
- 
+
 For use in Node.js, the browser (3Kb gzipped) or any other JavaScript environment.
 
 ### supermodels(schema [, initializer])
@@ -77,7 +77,7 @@ See the [examples](test/examples) folder
   A schema is any valid javascript object like `customerSchema` above.
   The object can also contain special metadata
   properties that describe the data. These properties are:
-  
+
 
  - __type
    - `String`, `Number`, `Date`, `Boolean`, `Array` or `Object`
@@ -86,7 +86,7 @@ See the [examples](test/examples) folder
  - __value
    - The default value of the property. If a function is passed, it will be called and the return value used e.g. `Date.now` can be used to timestamp the model.
  - __validators (Array)
-   - An array of functions that will be used to validate the model. Validators can be applied at both the "property" level e.g. `line1` and the  "object" level e.g. `address`. 
+   - An array of functions that will be used to validate the model. Validators can be applied at both the "property" level e.g. `line1` and the  "object" level e.g. `address`.
    - Use can choose whatever validation library you wish or roll your own.
    - Validators are called in series when the .errors property is accessed, if a validator returns a truthy value an error is added to the list.
  - __get
@@ -103,7 +103,7 @@ function required(value) {
   if (!value) {
     return 'Field is required';
   }
-} 
+}
 
 // Split out the Order into it's own constructor
 // so it can be shared with other models
@@ -124,14 +124,14 @@ var Address = supermodels({
     return this.line1 + ' ' + this.line2;
   }
 });
-  
+
 var customerSchema = {
-  // add a basic auto generated id field 
+  // add a basic auto generated id field
   id: {
     __type: String,
     __value: Math.random
   },
-  // add a required field validator to name 
+  // add a required field validator to name
   name: {
     __type: String,
     __validators: [required]
@@ -150,7 +150,7 @@ console.log(errors);
 ```
 
 #### Observable
- Events are propagated up through the object (person) is an similar fashion to how DOM events do. `change` events occur for all changes to the model. Other events emitted are: 
+ Events are propagated up through the object (person) is an similar fashion to how DOM events do. `change` events occur for all changes to the model. Other events emitted are:
 
  - `set`
    - Occurs when a value is updated. Event detail will include the new value and the old value. `set` events also occur when array items are updated. See the note on updating array values.
@@ -180,28 +180,28 @@ The following properties are available on each Object and Array of the model obj
 ```js
  person.__isRoot;
  // => true
- 
+
  person.address.__parent;
  // => person
- 
+
  person.address.latLong.__parent;
  // => person.address
- 
+
  person.address.latLong.__descendants;
  // => []
- 
+
  person.__children;
  // => [person.address]
- 
+
  person.__descendants;
  // => [person.address, person.address.latLong]
- 
+
  person.address.latLong.__ancestors;
  // => [person.address, person]
- 
+
  person.address.__name
  // => 'address'
- 
+
  person.address.latLong.__path
  // => 'address.latLong'
 ```
@@ -211,13 +211,13 @@ The following properties are available on each Object and Array of the model obj
   Each validator function get passed the current value as the first argument.
   The `this` context is the current "object" level e.g. `address` or `person`.
   If a `key` is present, it will be passed as a second argument.
-  
+
   If a validator returns nothing (`undefined`) then we assume everything is good.
   Any other response will yield a `ValidationError` into the `.errors` properties.
 
 ```js
-// 
-// Continuing the example from above you can see that errors, 
+//
+// Continuing the example from above you can see that errors,
 // like events, propagate up the object to the root
 
 person.errors //=> [] an array containing any errors for the entire person
@@ -297,6 +297,9 @@ var loginController = {
   },
   __validators: [someModelLevelValidator]
 };
+
+[![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard)
+
 ```
 
 

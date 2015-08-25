@@ -15,14 +15,13 @@
   "main": "index.js",
   "scripts": {
     "test1": "browserify -t coverify ./tape --bare | node | coverify",
-    "test": "tape ./test/*.js",
-    "build": "npm run jshint && npm run build:js && npm run build:js-min",
+    "test": "npm run standard && npm run tape",
+    "tape": "tape ./test/*.js",
+    "build": "npm run test && npm run build:js && npm run build:js-min",
     "build:examples": "browserify ./test/examples/affordability-assessment/index.js > ./test/examples/affordability-assessment/dist/build.js  -d",
     "build:js": "browserify index.js --standalone supermodels > ./dist/supermodels.js  -d",
     "build:js-min": "browserify index.js --standalone supermodels | uglifyjs --screw-ie8 --mangle > ./dist/supermodels.min.js",
-    "jshint": "jshint ./lib/*.js ./test/*.js",
-    "eslint": "eslint ./lib/*.js ./test/*.js",
-    "jscs": "jscs ./lib/*.js ./test/*.js",
+    "standard": "standard ./lib/*.js ./test/*.js",
     "watch:file": "watchify test/mixed.js -o bundle.js"
   },
   "repository": {
@@ -39,8 +38,7 @@
     "browserify": "^8.1.0",
     "tape": "^4.0.0",
     "coverify": "^1.3.2",
-    "jscs": "^1.13.1",
-    "eslint": "^0.21.0"
+    "standard": "^5.1.0"
   },
   "dependencies": {
     "watchify": "^3.2.1"
