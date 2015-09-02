@@ -2,7 +2,7 @@ var test = require('tape')
 var supermodels = require('../')
 
 test('scalar', function (t) {
-  t.plan(2)
+  t.plan(3)
 
   function range (min, max) {
     return function (value, key) {
@@ -15,6 +15,8 @@ test('scalar', function (t) {
     }
   }
 
+  // Define a simple model that represents a Percentage.
+  // This will be a number within the range 0, 100. A default of 42 is applied.
   var schema = {
     __type: Number,
     __value: 42,
@@ -22,15 +24,16 @@ test('scalar', function (t) {
   }
 
   var PercentModel = supermodels(schema)
+
+  // As this is a 'scalar' schema definition, a wrapper object returned
   var model = new PercentModel()
 
-  t.equal(model.getValue(), 42)
+  t.equal(model.value, 42)
 
-  model.setValue('-1')
-  t.equal(model.getValue(), -1)
+  model.value = '-1'
+  t.equal(model.value, -1)
 
-  // t.equal(model.errors.length, 1)
-
+  t.equal(model.errors.length, 1)
 })
 
 test('scalar array', function (t) {

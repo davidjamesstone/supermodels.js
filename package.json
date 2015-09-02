@@ -17,6 +17,7 @@
     "test1": "browserify -t coverify ./tape --bare | node | coverify",
     "test": "npm run standard && npm run tape",
     "tape": "tape ./test/*.js",
+    "build:tape": "browserify -d test/*.js > test/bundle/index.js",
     "build": "npm run test && npm run build:js && npm run build:js-min",
     "build:examples": "browserify ./test/examples/affordability-assessment/index.js > ./test/examples/affordability-assessment/dist/build.js  -d",
     "build:js": "browserify index.js --standalone supermodels > ./dist/supermodels.js  -d",
@@ -38,9 +39,7 @@
     "browserify": "^8.1.0",
     "tape": "^4.0.0",
     "coverify": "^1.3.2",
-    "standard": "^5.1.0"
-  },
-  "dependencies": {
+    "standard": "^5.1.0",
     "watchify": "^3.2.1"
   }
 }
