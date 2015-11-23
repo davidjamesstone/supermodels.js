@@ -15,7 +15,8 @@
   "main": "index.js",
   "scripts": {
     "test1": "browserify -t coverify ./tape --bare | node | coverify",
-    "test": "npm run standard && npm run tape",
+    "lint": "npm run standard",
+    "test": "npm run lint && npm run tape",
     "tape": "tape ./test/*.js",
     "build:tape": "browserify -d test/*.js > test/bundle/index.js",
     "build": "npm run test && npm run build:js && npm run build:js-min",
