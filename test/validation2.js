@@ -13,7 +13,7 @@ test('validation examples', function (t) {
       mark: Number,
       createdOn: Date
     }],
-    __validators: [function () {
+    __validators: [ function () {
       if (!this.scores.length) {
         return 'At least one score is required'
       }
@@ -21,7 +21,7 @@ test('validation examples', function (t) {
       if (this.title === 'Other' && !this.otherTitle) {
         return 'Please supply a value for Other title'
       }
-    }]
+    } ]
   }
   var Model = supermodels(schema)
   var model = new Model()
@@ -125,5 +125,4 @@ test('validation examples 2', function (t) {
   model.name = 'Jane Doe'
   model.address.line1 = 'Buckingham Palace'
   t.equal(model.errors.length, 0)
-
 })

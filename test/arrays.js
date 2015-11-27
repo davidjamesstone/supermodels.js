@@ -28,5 +28,4 @@ test('simple array', function (t) {
   var fred = BadOrdersSchema1()
 
   t.equal(fred, 'Fred')
-
 })

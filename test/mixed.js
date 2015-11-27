@@ -102,5 +102,4 @@ test('mixed', function (t) {
   var item = mixed.items.create()
   mixed.items.push(item)
   t.equal(mixed.items.length, 1)
-
 })

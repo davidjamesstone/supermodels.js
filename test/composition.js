@@ -16,11 +16,13 @@ test('composition references', function (t) {
     productCode: String,
     quantity: {
       __type: Number,
-      __validators: [function (value) {
-        if (!value) {
-          return 'Quantity is required'
+      __validators: [
+        function (value) {
+          if (!value) {
+            return 'Quantity is required'
+          }
         }
-      }]
+      ]
     }
   }, function (productCode, quantity) {
     this.productCode = productCode
@@ -83,5 +85,4 @@ test('composition references', function (t) {
   t.equals(customer.errors.length, 1)
   t.equals(customer.basket.errors.length, 1)
   t.equals(basketItem2.errors.length, 1)
-
 })

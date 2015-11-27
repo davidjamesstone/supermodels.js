@@ -69,5 +69,4 @@ test('mvc', function (t) {
   t.equal(formModel.address.fullAddress, 'Buckingham Palace, London')
   t.equal(formModel.address.fullAddress1, 'Buckingham Palace, London')
   t.equal(formModel.display, 'Elizabeth II of UK')
-
 })

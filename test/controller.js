@@ -59,5 +59,4 @@ test('simple array', function (t) {
   t.notEqual(ctrl2.submit, ctrl4.submit)
 
   t.equal(ctrl2.model.username, 'joanne@bloggs.com')
-
 })

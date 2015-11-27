@@ -21,11 +21,13 @@ test('merge', function (t) {
   // have a specific value to be valid
   var simpletonSchema = {
     __type: String,
-    __validators: [function (value, key) {
-      if (value !== "I'm a simpleton") {
-        return 'You must be a simpleton!'
+    __validators: [
+      function (value, key) {
+        if (value !== "I'm a simpleton") {
+          return 'You must be a simpleton!'
+        }
       }
-    }]
+    ]
   }
   // Simple models can be reused too. This
   // Simpleton class is used in the mixed model

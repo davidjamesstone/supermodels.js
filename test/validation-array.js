@@ -63,5 +63,4 @@ test('simple field model validation', function (t) {
 
   // should result in order now having no errors
   t.equal(model.errors.length, 0)
-
 })
