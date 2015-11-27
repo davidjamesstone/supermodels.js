@@ -1,22 +1,38 @@
 # supermodels.js
 
-Turn plain old javascript objects into observable, traversable, validatable and composable supermodels.
+Modeling library for javascript. Define schemas that represent your data.
+Create instances from schemas that can be observed, validated and composed.
 
-`npm install supermodels.js`
-
-supermodels can be used for all sorts of purposes including:
-
- 1. Acting as the `M` and `C|P` in an MV* paradigm
- 2. Defining your Business Objects (Customer, Address, Order etc.), their relationships and any validation rules.
- 3. Building blocks like Services, Factories, Singletons.
+`npm install supermodels.js --save`
 
 For use in Node.js, the browser (3Kb gzipped) or any other JavaScript environment.
 
-### supermodels(schema [, initializer])
+  - Isomorphic
+  - JSON serializable/deserializable (no pollution)
+  - Model instances are observable, validatable and composable.
 
-Returns a model constructor function for the given `schema` value. The optional `initializer` can be passed as a function that will be called on creating each instance of a model.
+supermodels can be used for all sorts of purposes including:
+
+ - On the front end as model components in a unidirectional data flow or MVC
+ - Defining your Business Objects (Customer, Address, Order etc.), their relationships and any validation rules.
+ - Validating HTTP payloads
+ - Building blocks like Services, Singletons
+
+## supermodels(schema)
+
+Returns a model constructor function for the given `schema` value.
 
 ```js
+// Define a basic `Comment` schema
+var commentSchema = {
+  body: String
+  createdDate: Date
+}
+
+var Comment = supermodels(customerSchema)
+
+// Define a `Customer` with some personal details,
+// an address, a list of orders and a list of comments
 var customerSchema = {
   name: String,
   age: Number,
@@ -25,281 +41,187 @@ var customerSchema = {
     line2: String,
     postcode: String,
     get fullAddress() {
-      return this.line1 + ' ' + this.line2;
+      return this.line1 + ', ' + this.line2;
     }
   },
   orders: [{
     productCode: String,
-    quantity: Number
-  }]
-};
-
-var initializer = function(name, age) {
-  this.name = name;
-  this.age = age;
-};
+    price: Number,
+    quantity: Number,
+    get total () {
+      return '$' + price * quantity
+    }
+  }],
+  comments: [Comment]
+}
 
 // Call supermodels to get our Customer constructor
-var Customer = supermodels(customerSchema, initializer);
+var Customer = supermodels(customerSchema)
 
 // Call constructor like you would
-// Note the `new` keyword is optional
-var customer = new Customer('foo', 42);
-var customer1 = new Customer('bar', 43);
+// We can pass is some initial data
+var customer = new Customer({
+  name: 'Jane Doe',
+  age: 42,
+  address: {
+    line1: 'Buckingham Palace',
+    line2: 'London',
+    postcode: 'L1 1XY'
+  },
+  orders: [{ productCode: 'ABC001', price: 99.99, quantity: 2 }]
+})
 
-/*
- * Models are observable
- */
-customer.on('change', function(e) {
-  console.log(e.path, e.detail.newValue, e.detail.oldValue);
-});
-customer.address.line1 = 'Line 1';
-customer.address.line1 = 'Line 2';
+console.log(customer.fullAddress)
+//=> 'Buckingham Palace, London'
 
-// Listeners can be added to any level of the model
-customer.address.on('change', function(e) {});
-customer.orders.on('push', function(e) {
-  console.log('Order count: ', e.detail.value);
-});
+console.log(customer.orders.length)
+//=> 1
 
-// models are validatable
-console.log(customer.errors);
-console.log(customer.address.errors);
+console.log(customer.order[0].total)
+//=> $199.98
 
-// => [] Empty Arrays are returned as we haven't defined any validators yet
+console.log(customer.comments.length)
+//=> 0
+
+customer.comments.push(new Comment({ text: 'Hello world', date: Date.now() }))
+console.log(customer.comments.length)
+//=> 1
 
 ```
+
 
 See the [examples](test/examples) folder
 
-### schema definition
+## prop([type])
+The `prop` function provides a fluent interface for building properties.
+It allows us to add metadata and validation rules to our schema.
 
-  A schema is any valid javascript object like `customerSchema` above.
-  The object can also contain special metadata
-  properties that describe the data. These properties are:
+Metadata methods available in the fluent interface:
 
-
- - __type
+ - `type`
    - `String`, `Number`, `Date`, `Boolean`, `Array` or `Object`
-   - Can also be set to another supermodel constructor function
    - Values will be cast on supported types `String`, `Number`, `Date` and `Boolean`.
- - __value
+   - Can also be a reference another model
+ - `name`
+   - A display name for the property
+ - `value`
    - The default value of the property. If a function is passed, it will be called and the return value used e.g. `Date.now` can be used to timestamp the model.
- - __validators (Array)
-   - An array of functions that will be used to validate the model. Validators can be applied at both the "property" level e.g. `line1` and the  "object" level e.g. `address`.
-   - Use can choose whatever validation library you wish or roll your own.
-   - Validators are called in series when the .errors property is accessed, if a validator returns a truthy value an error is added to the list.
- - __get
+ - `validate` (fn)
+   - Register a validator. This can be used as an alternative to registering on the `prop`'s fluent interface
+ - `get` (fn)
    - A getter function.
- - __set
- - __configurable
- - __enumerable
+ - `set` (fn)
+   - A setter function.
+ - `enumerable`, `writable`, `configurable`
 
-#### Validation
-Building on the above example we can start applying in some validations rules. We'll also introduce how to compose models together.
-```js
-// Create a simple "required" field validator
-function required(value) {
-  if (!value) {
-    return 'Field is required';
-  }
-}
-
-// Split out the Order into it's own constructor
-// so it can be shared with other models
-var Order = supermodels({
-  productCode: String,
-  quantity: Number
-});
-
-var Address = supermodels({
-  line1: String,
-  line2: String,
-  postcode: String,
-  latLong: {
-    lat: Number,
-    long: Number
-  },
-  get fullAddress() {
-    return this.line1 + ' ' + this.line2;
-  }
-});
-
-var customerSchema = {
-  // add a basic auto generated id field
-  id: {
-    __type: String,
-    __value: Math.random
-  },
-  // add a required field validator to name
-  name: {
-    __type: String,
-    __validators: [required]
-  },
-  age: Number,
-  address: Address,
-  orders: [Order]
-};
-
-var Customer = supermodels(customerSchema);
-var customer = new Customer();
-customer.orders.push(new Order());
-
-var errors = customer.errors;
-console.log(errors);
-```
-
-#### Observable
- Events are propagated up through the object (person) is an similar fashion to how DOM events do. `change` events occur for all changes to the model. Other events emitted are:
-
- - `set`
-   - Occurs when a value is updated. Event detail will include the new value and the old value. `set` events also occur when array items are updated. See the note on updating array values.
- - `push`
- - `pop`
- - `unshift`
- - `shift`
- - `sort`
- - `reverse`
- - `splice`
+There are no built in validators but they can easily defined using the `register` function.
 
 ```js
-// Fires when any change is made to the person
-person.on('change', function(e) {});
+var prop = supermodels.prop()
 
-// Fires when any change is made to the address
-person.address.on('change', function(e) {});
-
-// Fires when any change is made to the latLong
-person.address.latLong.on('change', function(e) {});
-```
-
-#### Traversable
-The following properties are available on each Object and Array of the model object to help navigate:
-  `__name`, `__parent`, `__ancestors`, `__descendants`, `__keys`, `__children`, `__isRoot`, `__hasAncestors`, `__path`, `__hasDescendants`. These are not often required but can be useful to look up ancestor properties.
-
-```js
- person.__isRoot;
- // => true
-
- person.address.__parent;
- // => person
-
- person.address.latLong.__parent;
- // => person.address
-
- person.address.latLong.__descendants;
- // => []
-
- person.__children;
- // => [person.address]
-
- person.__descendants;
- // => [person.address, person.address.latLong]
-
- person.address.latLong.__ancestors;
- // => [person.address, person]
-
- person.address.__name
- // => 'address'
-
- person.address.latLong.__path
- // => 'address.latLong'
-```
-
-```
-#### Validation
-  Each validator function get passed the current value as the first argument.
-  The `this` context is the current "object" level e.g. `address` or `person`.
-  If a `key` is present, it will be passed as a second argument.
-
-  If a validator returns nothing (`undefined`) then we assume everything is good.
-  Any other response will yield a `ValidationError` into the `.errors` properties.
-
-```js
-//
-// Continuing the example from above you can see that errors,
-// like events, propagate up the object to the root
-
-person.errors //=> [] an array containing any errors for the entire person
-person.address.errors //=> [] an array containing any errors for address and below
-person.address.latLong.errors //=> [] an array containing any errors for just the latLong
-
-```
-
-##### Simple example
-
-```js
-// Declare a simple truthy function.
-// You can do your own validation methods
-// like this or use a separate library, or both.
-var required = function(value, key) {
-  if (!value) {
-    return key + ' is required';
-  }
-};
-
-var personSchema = {
-  name: {
-    __type: String,
-    __validators: [required]
-  },
-  address: {
-    line1: {
-      __type: String,
-      __validators: [required]
-    },
-    line2: {
-      __type: String,
-      __validators: [required]
+// Let's register 3 simple validators. Registering validators
+// makes them part of the fluent interface when using `prop`.
+prop.register('required', function () {
+  return function (val, name) {
+    if (!val) {
+      return name + ' is required'
     }
   }
+})
+
+prop.register('min', function (min) {
+  return function (val, name) {
+    if (val < min) {
+      return name + ' is less than ' + min
+    }
+  }
+})
+
+prop.register('max', function (max) {
+  return function (val, name) {
+    if (val > max) {
+      return name + ' is greater than ' + max
+    }
+  }
+})
+
+```
+```js
+// Using the previous customer example
+// we can start to build some validation.
+var customerSchema = {
+  name: prop(String).name('Name').required(),
+  age: prop(Number).name('Age').required().min(0).max(150),
+  address: {
+    line1: prop(String).name('Line 1').required(),
+    line2: prop(String).name('Line 2').required(),
+    postcode: prop(String).name('Postcode'),
+    get fullAddress () {
+      return this.line1 + ', ' + this.line2
+    }
+  },
+  orders: [{
+    productCode: String,
+    price: Number,
+    quantity: prop(Number).name('Quantity').required().value(1).min(1).max(10),
+    get total () {
+      return '$' + (this.price * this.quantity)
+    }
+  }],
+  comments: [Comment]
 }
 
-var Person = supermodels(personSchema);
+var Customer = supermodels(customerSchema)
 
-var person = new Person();
+var customer = new Customer()
 
-person.errors
-// => [ 3 x ValidationErrors: name, address.line1, address.line2 are required ]
+// All model objects have a special `errors` property.
+// Accessing this property will run the validators and
+// return an array of `ValidationError`s
+console.log(customer.address.errors)
+// => ['Line 1 is required', 'Line 2 is required']
 
-person.address.errors
-// => [ 2 x ValidationErrors: line1, line 2 are required]
+console.log(customer.orders.errors)
+// => Returns all `orders` errors
 
-person.name = 'Jane Doe';
-person.address.line1 = 'Buckingham Palace';
-person.address.line2 = 'London';
+console.log(customer.comments.errors)
+// => Returns all `comments` errors
 
-person.errors
-// => []
-
-person.address.errors
-// => []
+console.log(customer.errors)
+// => Returns all errors
 ```
 
-##### Real world example
+
+
+## Events
+Events are propagated up through models is an similar fashion to how DOM events do. Event handlers are added and removed using the `on` and `off` methods.
+
+A `change` event occurs for all modifications to the model. Other more specific events are also available:
+
+- `set`
+  - Occurs when a value is updated. Event detail will include the new value and the old value. `set` events also occur when array items are updated. See the note on updating array values.
+- `push`
+- `pop`
+- `unshift`
+- `shift`
+- `sort`
+- `reverse`
+- `splice`
+
 ```js
+customer.on('change', function(e) {
+  console.log(e.path, e.detail.newValue, e.detail.oldValue);
+})
+customer.address.line1 = 'Line 1'
+customer.address.line1 = 'Line 2'
 
-// Moving away from the person example, here we
-// show how supermodels can act as a UI controller
-var loginController = {
-  userName: {
-    __type: String,
-    __validators: [required]
-  },
-  password: {
-    __type: String,
-    __validators: [yourPasswordValidator]
-  },
-  address: addressSchema,
-  acceptedTermsConditions: {
-    __type: Boolean,
-    __validators: [required]
-  },
-  __validators: [someModelLevelValidator]
-};
-
-
+// Listeners can be added to any level of the model
+customer.address.on('change', function(e) {})
+customer.orders.on('push', function(e) {
+  console.log('Order count: ', e.detail.value)
+})
 ```
+
 [![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/feross/standard)
 
 

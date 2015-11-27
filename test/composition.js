@@ -24,9 +24,6 @@ test('composition references', function (t) {
         }
       ]
     }
-  }, function (productCode, quantity) {
-    this.productCode = productCode
-    this.quantity = quantity
   })
 
   var Basket = supermodels({
@@ -57,7 +54,9 @@ test('composition references', function (t) {
   t.equals(customer.basket.__parent, customer)
 
   customer.name = 'Jo Bloggs'
-  var basketItem = new BasketItem('P100', 2)
+  var basketItem = new BasketItem()
+  basketItem.productCode = 'P100'
+  basketItem.quantity = 2
   customer.basket.items.push(basketItem)
   t.equals(customer.basket.items[0].__parent, customer.basket.items)
 
@@ -79,7 +78,8 @@ test('composition references', function (t) {
   // quantity, should sum 1. The error should propagate.
   t.equals(customer.errors.length, 0)
 
-  var basketItem2 = new BasketItem('P100')
+  var basketItem2 = new BasketItem()
+  basketItem2.productCode = 'P100'
   customer.basket.items.push(basketItem2)
 
   t.equals(customer.errors.length, 1)

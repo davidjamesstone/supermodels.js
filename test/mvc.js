@@ -40,12 +40,10 @@ test('mvc', function (t) {
   var formCtrlSchema = {
     model: FormModel
   }
-  var FormCtrl = supermodels(formCtrlSchema, function () {
-    this.model = new FormModel()
-  })
+  var FormCtrl = supermodels(formCtrlSchema)
 
   var formCtrl = new FormCtrl()
-  var formModel = formCtrl.model
+  var formModel = formCtrl.model = new FormModel()
 
   console.log(formModel.errors.map(function (item) {
     return item.target.__path + '.' + item.key + ': ' + item.error

@@ -36,7 +36,7 @@ prop.register('max', function (max) {
 
 test('simple test', function (t) {
   var ordersSchema = [{
-    quantity: prop(Number).name('Quantity').required().default(1).min(1).max(10),
+    quantity: prop(Number).name('Quantity').required().value(1).min(1).max(10),
     productCode: prop(String).name('Product Code').required()
   }]
 
