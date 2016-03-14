@@ -2,13 +2,11 @@ var test = require('tape')
 var supermodels = require('../')
 
 test('supermodels', function (t) {
-  t.plan(1)
   t.equal(typeof supermodels, 'function')
+  t.end()
 })
 
 test('creating a supermodel from a simple schema', function (t) {
-  t.plan(1)
-
   var schema = {
     a: String,
     b: Number,
@@ -18,11 +16,11 @@ test('creating a supermodel from a simple schema', function (t) {
   var Model = supermodels(schema)
 
   t.equal(typeof Model, 'function')
+
+  t.end()
 })
 
 test('creating an model instance from a supermodel', function (t) {
-  t.plan(4)
-
   var schema = {
     a: String,
     b: Number,
@@ -36,11 +34,11 @@ test('creating an model instance from a supermodel', function (t) {
   t.equal(typeof model.b, 'undefined')
   t.equal(typeof model.c, 'number')
   t.equal(model.c, 42)
+
+  t.end()
 })
 
 test('creating an instance from a supermodel with constructor initializer', function (t) {
-  t.plan(2)
-
   var schema = {
     a: String,
     b: Number
@@ -59,4 +57,6 @@ test('creating an instance from a supermodel with constructor initializer', func
 
   t.equal(model.a, '42')
   t.equal(model.b, 42)
+
+  t.end()
 })

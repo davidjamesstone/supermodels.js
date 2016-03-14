@@ -1,17 +1,13 @@
 var test = require('tape')
 var supermodels = require('../')
+var prop = require('./prop')
 
 test('mixed', function (t) {
-  t.plan(17)
-
   var mixedSchema = {
     val: '2',
     val1: 2,
     initializedDate: new Date(),
-    typedAndInitializedDate: {
-      __type: Date,
-      __value: Date.now
-    },
+    typedAndInitializedDate: prop(Date).value(Date.now),
     fn: function () {
       console.log(this)
     },
@@ -29,15 +25,9 @@ test('mixed', function (t) {
     },
     age: Number,
     address: {
-      line1: {
-        __value: 'Marble Arch'
-      },
+      line1: prop(String).value('Marble Arch'),
       line2: {},
       country: 'UK',
-      fullAddress1: {
-        __get: function () {},
-        __validators: []
-      },
       get fullAddress () {
         return this.line1 + ', ' + this.line2 + ', ' + this.country
       },
@@ -48,27 +38,18 @@ test('mixed', function (t) {
         this.country = parts[2]
       },
       latLong: {
-        lat: {
-          __type: Number
-        },
-        long: {
-          __type: Number
-        }
+        lat: Number,
+        long: Number
       }
     },
     items: [{
-      name: {
-        __type: String
-      },
+      name: String,
       quantity: Number,
       subItems: [{
-        subName: {
-          __type: String
-        },
+        subName: String,
         subMixed: 'defaultvalue'
       }]
-    }],
-    __validators: []
+    }]
   }
 
   var Mixed = supermodels(mixedSchema)
@@ -102,4 +83,6 @@ test('mixed', function (t) {
   var item = mixed.items.create()
   mixed.items.push(item)
   t.equal(mixed.items.length, 1)
+
+  t.end()
 })

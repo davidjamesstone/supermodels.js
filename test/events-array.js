@@ -3,8 +3,6 @@ var supermodels = require('../')
 var personSchema = require('./schema/person')
 
 test('array object events 1', function (t) {
-  t.plan(15)
-
   var Person = supermodels(personSchema)
   var model = new Person()
 
@@ -42,11 +40,11 @@ test('array object events 1', function (t) {
   })
 
   model.person.name = 'Foo'
+
+  t.end()
 })
 
 test('array object events 2', function (t) {
-  t.plan(15)
-
   var Person = supermodels(personSchema)
   var model = new Person()
 
@@ -98,4 +96,6 @@ test('array object events 2', function (t) {
 
   t.equal(address.latLong.lat, 100)
   t.equal(address.latLong.long, 100)
+
+  t.end()
 })

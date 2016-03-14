@@ -1,9 +1,8 @@
 var test = require('tape')
 var supermodels = require('../')
+var prop = require('./prop')
 
 test('scalar', function (t) {
-  t.plan(3)
-
   function range (min, max) {
     return function (value, key) {
       if (value < min || value > max) {
@@ -17,11 +16,7 @@ test('scalar', function (t) {
 
   // Define a simple model that represents a Percentage.
   // This will be a number within the range 0, 100. A default of 42 is applied.
-  var schema = {
-    __type: Number,
-    __value: 42,
-    __validators: [range(0, 100)]
-  }
+  var schema = prop(Number).value(42).validate(range(0, 100))
 
   var PercentModel = supermodels(schema)
 
@@ -34,11 +29,11 @@ test('scalar', function (t) {
   t.equal(model.value, -1)
 
   t.equal(model.errors.length, 1)
+
+  t.end()
 })
 
 test('scalar array', function (t) {
-  t.plan(9)
-
   var schema = {
     val: ['2'],
     val1: [2],
@@ -67,4 +62,6 @@ test('scalar array', function (t) {
   t.equal(model.val[0], '3')
   t.equal(model.val1[0], '3')
   t.equal(model.val2[0], 3)
+
+  t.end()
 })

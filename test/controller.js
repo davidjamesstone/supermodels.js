@@ -1,35 +1,37 @@
 'use strict'
 
 var supermodels = require('../')
-var helpers = require('./validators/helpers')
-var required = helpers.required
-var passwordValidator = helpers.passwordValidator
-
+var prop = require('./prop')
 var test = require('tape')
 
 test('simple array', function (t) {
-  t.plan(9)
+  // Define a simple password validator function
+  function passwordValidator (value, name) {
+    if (value && value.length < 5) {
+      return {
+        key: name,
+        message: 'Password should be 5 or more characters'
+      }
+    }
+  }
 
   var LoginModel = supermodels({
-    username: required('User name'),
-    password: required('Password', String, [passwordValidator])
+    username: prop(String).required().name('User name'),
+    password: prop(String).required().name('Password').validate(passwordValidator)
   })
 
   var LoginControllerA = supermodels({
     model: LoginModel,
     submit: function (e) {
       e.preventDefault()
-    // xhr('POST', '/login', this.model, function () {})
+      // xhr('POST', '/login', this.model, function () {})
     }
   })
 
   var LoginControllerB = supermodels({
-    model: {
-      __type: LoginModel,
-      __value: function () {
-        return new LoginModel({})
-      }
-    },
+    // define `model` to be of type `LoginModel`. Use the value
+    // method to initialize to a new LoginModel on construction
+    model: prop(LoginModel).value(LoginModel),
     submit: function (e) {
       e.preventDefault()
     // xhr('POST', '/login', this.model, function () {})
@@ -59,4 +61,6 @@ test('simple array', function (t) {
   t.notEqual(ctrl2.submit, ctrl4.submit)
 
   t.equal(ctrl2.model.username, 'joanne@bloggs.com')
+
+  t.end()
 })

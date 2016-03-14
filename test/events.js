@@ -2,8 +2,6 @@ var test = require('tape')
 var supermodels = require('../')
 
 test('simple field level events', function (t) {
-  t.plan(4)
-
   var schema = {
     a: String,
     b: String
@@ -38,11 +36,11 @@ test('simple field level events', function (t) {
   var model1 = new Model()
   model1.a = 'baz'
   t.equal(eventCount, 4)
+
+  t.end()
 })
 
 test('array scalar events 1', function (t) {
-  t.plan(3)
-
   var schema = {
     a: Array
   }
@@ -72,11 +70,11 @@ test('array scalar events 1', function (t) {
   model.a.update(0, 'baz') // special update function, should now cause 2 events
 
   t.equal(eventCount, 5)
+
+  t.end()
 })
 
 test('array scalar events 2', function (t) {
-  t.plan(32)
-
   var schema = {
     a: [Number]
   }
@@ -161,11 +159,11 @@ test('array scalar events 2', function (t) {
   t.equal(eventCount, 11)
   t.equal(model.a.length, 0)
   t.equal(rtn.length, 3)
+
+  t.end()
 })
 
 test('array object events', function (t) {
-  t.plan(7)
-
   var schema = {
     person: {
       name: String,
@@ -217,4 +215,6 @@ test('array object events', function (t) {
   t.equal(eventCount, 12)
 
   t.equal(model.person.addresses.length, 1)
+
+  t.end()
 })

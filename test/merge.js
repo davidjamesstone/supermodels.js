@@ -1,13 +1,14 @@
 var test = require('tape')
 var supermodels = require('../')
+var prop = require('./prop')
 
 test('merge', function (t) {
-  t.plan(40)
-
-  var ordersSchema = [{
+  var orderSchema = {
     quantity: Number,
     productCode: String
-  }]
+  }
+  var Order = supermodels(orderSchema)
+  var ordersSchema = [Order]
   var Orders = supermodels(ordersSchema)
 
   var commentSchema = {
@@ -17,30 +18,24 @@ test('merge', function (t) {
   }
   var Comment = supermodels(commentSchema)
 
+  function simpletonValidator (value, key) {
+    if (value !== "I'm a simpleton") {
+      return 'You must be a simpleton!'
+    }
+  }
   // define a simple string that must
   // have a specific value to be valid
-  var simpletonSchema = {
-    __type: String,
-    __validators: [
-      function (value, key) {
-        if (value !== "I'm a simpleton") {
-          return 'You must be a simpleton!'
-        }
-      }
-    ]
-  }
+  var simpletonSchema = prop(String).validate(simpletonValidator)
+
   // Simple models can be reused too. This
   // Simpleton class is used in the mixed model
   var Simpleton = supermodels(simpletonSchema)
 
-  var mixedSchema = {
+  var mixedSchema = prop().keys({
     val: '2',
     val1: 2,
     initializedDate: new Date(),
-    typedAndInitializedDate: {
-      __type: Date,
-      __value: Date.now
-    },
+    typedAndInitializedDate: prop(Date).value(Date.now),
     fn: function () {
       console.log(this)
     },
@@ -58,15 +53,10 @@ test('merge', function (t) {
     },
     age: Number,
     address: {
-      line1: {
-        __value: 'Marble Arch'
-      },
+      line1: prop().value('Marble Arch'),
       line2: {},
       country: 'UK',
-      fullAddress1: {
-        __get: function () {},
-        __validators: []
-      },
+      fullAddress1: prop().value(function () {}),
       get fullAddress () {
         return this.line1 + ', ' + this.line2 + ', ' + this.country
       },
@@ -77,12 +67,8 @@ test('merge', function (t) {
         this.country = parts[2]
       },
       latLong: {
-        lat: {
-          __type: Number
-        },
-        long: {
-          __type: Number
-        }
+        lat: Number,
+        long: Number
       }
     },
     scores: [Number],
@@ -96,25 +82,25 @@ test('merge', function (t) {
       },
       quantity: Number,
       subItems: [{
-        subName: {
-          __type: String
-        },
+        subName: String,
         subMixed: 'defaultvalue'
       }]
     }],
     orders: Orders,
     comments: [Comment],
-    simpleton: Simpleton,
-    __validators: [
-      function (value) {
-        if (this.comments.length === 0) {
-          return 'At least 1 comment is required'
-        }
-      }
-    ]
-  }
+    simpleton: Simpleton
+  }).validate(function (value) {
+    if (this.comments.length === 0) {
+      return 'At least 1 comment is required'
+    }
+  })
 
   var Mixed = supermodels(mixedSchema)
+
+  var order = new Order({
+    productCode: 'ABC3',
+    quantity: 2
+  })
 
   var orders = new Orders([{
     productCode: 'ABC1',
@@ -122,9 +108,11 @@ test('merge', function (t) {
   }, {
     productCode: 'ABC2',
     quantity: 1
-  }])
+  }, order])
 
-  t.equal(orders.length, 2)
+  // orders.push(order)
+
+  t.equal(orders.length, 3)
 
   var mixed = new Mixed()
 
@@ -218,7 +206,7 @@ test('merge', function (t) {
     }]
   }
 
-  mixed.__merge(mergeData)
+  supermodels.merge(mixed, mergeData)
 
   t.equal(mixed.val, '2')
   t.equal(mixed.val1, 'baa')
@@ -245,4 +233,6 @@ test('merge', function (t) {
   t.equal(mixed1.comments.length, 2)
   t.equal(mixed1.orders[0].productCode, 'ABC1')
   t.equal(mixed1.comments[1].title, 'TITLE1')
+
+  t.end()
 })

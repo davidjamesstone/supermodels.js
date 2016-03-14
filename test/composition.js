@@ -1,5 +1,6 @@
 var test = require('tape')
 var supermodels = require('../')
+var prop = require('./prop')
 
 /*
  * Tests for models being composable.
@@ -10,20 +11,9 @@ var supermodels = require('../')
  * basket.items = Array<BasketItem>
  */
 test('composition references', function (t) {
-  t.plan(10)
-
   var BasketItem = supermodels({
     productCode: String,
-    quantity: {
-      __type: Number,
-      __validators: [
-        function (value) {
-          if (!value) {
-            return 'Quantity is required'
-          }
-        }
-      ]
-    }
+    quantity: prop(Number).name('Quantity').required()
   })
 
   var Basket = supermodels({
@@ -73,7 +63,7 @@ test('composition references', function (t) {
   t.equals(customer.basket.totalItems(), 3)
 
   // Assert the errors are propagated correctly.
-  // Shouud have length zero at first, then after
+  // Should have length zero at first, then after
   // adding a new basket item without the required
   // quantity, should sum 1. The error should propagate.
   t.equals(customer.errors.length, 0)
@@ -85,4 +75,6 @@ test('composition references', function (t) {
   t.equals(customer.errors.length, 1)
   t.equals(customer.basket.errors.length, 1)
   t.equals(basketItem2.errors.length, 1)
+
+  t.end()
 })
