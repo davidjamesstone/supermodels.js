@@ -29,7 +29,7 @@ var commentSchema = {
   createdDate: Date
 }
 
-var Comment = supermodels(customerSchema)
+var Comment = supermodels(commentSchema)
 
 // Define a `Customer` with some personal details,
 // an address, a list of orders and a list of comments
