@@ -1,6 +1,6 @@
 {
   "name": "supermodels.js",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Turn plain old javascript objects into observable, traversable, validatable and composable supermodels.",
   "keywords": [
     "Object modelling",
